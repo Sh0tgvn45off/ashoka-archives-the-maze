@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ashoka Archives</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#05050e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;}
+#wrap{position:relative;background:#05050e;border:2px solid #c8a84b;box-shadow:0 0 50px rgba(200,168,75,0.18);}
+canvas{display:block;}
+
+/* HUD */
+#hud{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:space-between;padding:0 10px;font-size:10px;color:#c8a84b;z-index:4;pointer-events:none;border-bottom:1px solid rgba(200,168,75,0.2);}
+
+/* Overlay */
+#ov{position:absolute;inset:0;background:rgba(0,0,0,0.93);display:flex;align-items:center;justify-content:center;z-index:10;}
+#ovbox{border:2px solid #c8a84b;background:#0b0b1c;padding:28px 32px;width:360px;text-align:center;color:#e0d8c0;font-size:11px;line-height:1.9;max-height:90vh;overflow-y:auto;}
+#ovbox h1{color:#c8a84b;font-size:16px;font-weight:bold;margin-bottom:4px;}
+#ovbox h2{color:#444;font-size:9px;letter-spacing:3px;margin-bottom:14px;}
+#ovbox .sub{font-size:9px;color:#555;margin-bottom:12px;}
+#ovbox p{font-size:10px;text-align:left;margin-bottom:12px;line-height:1.8;}
+
+/* Buttons */
+.btn{padding:9px 0;font-size:11px;font-family:'Courier New',monospace;font-weight:bold;cursor:pointer;display:block;width:100%;margin-bottom:7px;border:1.5px solid #c8a84b;background:transparent;color:#c8a84b;transition:all 0.1s;}
+.btn:hover,.btn:active{background:#c8a84b;color:#000;}
+.btn.g{border-color:#22cc55;color:#22cc55;background:rgba(34,204,85,0.05);}
+.btn.g:hover,.btn.g:active{background:#22cc55;color:#000;}
+.btn.r{border-color:#cc3333;color:#cc3333;background:rgba(204,51,51,0.05);}
+.btn.r:hover{background:#cc3333;color:#fff;}
+.btn.sm{font-size:9px;padding:6px 0;margin-bottom:5px;}
+
+/* Death popup */
+#deathpop{position:absolute;inset:0;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;z-index:12;}
+#deathbox{border:2px solid #cc3333;background:#120505;padding:28px 32px;width:340px;text-align:center;color:#e0d8c0;}
+#deathbox .dtitle{font-size:16px;font-weight:bold;margin-bottom:8px;}
+#deathbox .dreason{font-size:11px;margin-bottom:10px;line-height:1.7;}
+#deathbox .dinfo{font-size:10px;color:#888;margin-bottom:16px;line-height:1.7;}
+
+/* Level transition */
+#lvpop{position:absolute;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:11;}
+#lvbox{border:2px solid #22cc55;background:#041008;padding:32px 36px;width:340px;text-align:center;color:#e0d8c0;}
+#lvbox .lnum{font-size:28px;font-weight:bold;color:#22cc55;margin-bottom:6px;}
+#lvbox .lname{font-size:11px;color:#c8a84b;letter-spacing:3px;margin-bottom:16px;}
+#lvbox .lstats{font-size:10px;color:#888;margin-bottom:18px;line-height:1.8;}
+
+/* Notification */
+#msg{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.94);border:1px solid #c8a84b;color:#c8a84b;padding:5px 16px;font-size:10px;display:none;z-index:8;white-space:nowrap;max-width:95%;text-align:center;pointer-events:none;}
+
+/* Knowledge popup */
+#kp{position:absolute;bottom:34px;left:8px;right:8px;background:#070e0a;border:2px solid #22cc55;padding:12px 15px;font-size:10px;line-height:1.75;display:none;z-index:9;}
+#kpt{font-weight:bold;font-size:11px;margin-bottom:5px;}
+#kpb{font-size:10px;color:#c8c0b0;}
+#kps{font-size:9px;color:#444;margin-top:7px;}
+
+/* Image popup overlay */
+#imgpop {
+  position:absolute;inset:0;z-index:20;display:none;
+  align-items:center;justify-content:center;flex-direction:column;
+}
+#imgpop .blur-bg {
+  position:absolute;inset:0;
+  backdrop-filter:blur(8px);
+  background:rgba(0,0,0,0.72);
+}
+#imgpop .img-frame {
+  position:relative;z-index:2;
+  max-width:82%;max-height:62%;
+  border:2px solid #c8a84b;
+  box-shadow:0 0 40px rgba(0,0,0,0.8);
+}
+#imgpop .img-frame img {
+  display:block;width:100%;max-height:340px;object-fit:cover;
+}
+#imgpop .img-caption {
+  position:relative;z-index:2;
+  margin-top:14px;text-align:center;
+  color:#e0d8c0;font-family:'Courier New',monospace;
+  max-width:82%;
+}
+#imgpop .img-caption .cap-title {
+  font-size:14px;font-weight:bold;color:#c8a84b;margin-bottom:6px;
+}
+#imgpop .img-caption .cap-fact {
+  font-size:10px;line-height:1.7;color:#b0a898;
+}
+
+/* Idle screensaver */
+#idlepop {
+  position:absolute;inset:0;z-index:22;display:none;
+  align-items:center;justify-content:center;cursor:pointer;
+}
+#idlepop .blur-bg {
+  position:absolute;inset:0;
+  backdrop-filter:blur(6px);
+  background:rgba(0,0,0,0.80);
+}
+#idlepop img {
+  position:relative;z-index:2;
+  max-width:88%;max-height:78%;
+  object-fit:contain;
+  border:2px solid #c8a84b;
+}
+#idlepop .idle-label {
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  z-index:3;color:#c8a84b;font-family:'Courier New',monospace;
+  font-size:10px;letter-spacing:2px;text-align:center;
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="gc"></canvas>
+  <div id="hud"></div>
+
+  <!-- Main overlay (menu/pause/win/leaderboard) -->
+  <div id="ov">
+    <div id="ovbox">
+      <h1>ASHOKA ARCHIVES</h1>
+      <h2>THE MAZE · 10 LEVELS</h2>
+      <p>You are <b style="color:#c8a84b">LAZZ</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>
+      <span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be gassed!<br>
+      <span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>
+      Collect all <b style="color:#ffaa22">5 Curiosity Points</b> scattered in each level.<br>
+      Every maze always has multiple routes. Spikes always have bypasses.</p>
+      <button class="btn g" id="startbtn">▶ ENTER ARCHIVES — LEVEL MAZE 1</button>
+      <button class="btn sm" id="lbbtn">🏆 NO-DEATH LEADERBOARD</button>
+      <div style="font-size:9px;color:#333;margin-top:4px;">WASD / ARROWS — move &nbsp;|&nbsp; R — restart level &nbsp;|&nbsp; C — checkpoint &nbsp;|&nbsp; ESC — pause</div>
+    </div>
+  </div>
+
+  <!-- Death popup -->
+  <div id="deathpop">
+    <div id="deathbox">
+      <div class="dtitle" id="dtitle"></div>
+      <div class="dreason" id="dreason"></div>
+      <div class="dinfo" id="dinfo"></div>
+      <button class="btn g" id="dretry">↺ TRY AGAIN — SAME LEVEL</button>
+      <button class="btn r sm" id="drestart">◼ NEW RUN FROM LEVEL 1</button>
+    </div>
+  </div>
+
+  <!-- Level transition popup -->
+  <div id="lvpop">
+    <div id="lvbox">
+      <div class="lnum" id="lvnum"></div>
+      <div class="lname" id="lvname"></div>
+      <div class="lstats" id="lvstats"></div>
+      <button class="btn g" id="lvnext">▶ ENTER LEVEL</button>
+    </div>
+  </div>
+
+  <div id="msg"></div>
+  <div id="kp">
+    <div id="kpt"></div>
+    <div id="kpb"></div>
+    <div id="kps">Press any key or wait 5s to continue · +1 Curiosity Point</div>
+  </div>
+
+  <!-- Image popup (curiosity point reveal) -->
+  <div id="imgpop">
+    <div class="blur-bg"></div>
+    <div class="img-frame"><img id="imgpop-img" src="" alt=""></div>
+    <div class="img-caption">
+      <div class="cap-title" id="imgpop-title"></div>
+      <div class="cap-fact"  id="imgpop-fact"></div>
+    </div>
+  </div>
+
+  <!-- Idle screensaver -->
+  <div id="idlepop" onclick="dismissIdle()">
+    <div class="blur-bg"></div>
+    <img src="assets/IDEAL_SCREEN_POP_UP.jpeg" alt="Ashoka Archives">
+    <div class="idle-label">PRESS ANY KEY OR CLICK TO CONTINUE</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════════════════════
+const TILE = 22;
+const COLS = 51, ROWS = 37;
+const CW = COLS * TILE, CH = ROWS * TILE + 26;
+const OY = 26;
+
+const wrap = document.getElementById('wrap');
+const gc   = document.getElementById('gc');
+const ctx  = gc.getContext('2d');
+wrap.style.width  = CW + 'px';
+wrap.style.height = CH + 'px';
+gc.width = CW; gc.height = CH;
+
+// ═══════════════════════════════════════════════════════════
+// ARCHIVE KNOWLEDGE (5 items — all 5 available every level)
+// ═══════════════════════════════════════════════════════════
+const KNOWLEDGE = [
+  {ch:'F', col:'#22cc55', nm:'FUMIGATION',
+   fact:'The Archives fumigates collections with thymol crystals in a sealed chamber, eliminating insects and mold spores that destroy paper over decades.'},
+  {ch:'L', col:'#5599ff', nm:'LAMINATION',
+   fact:'Fragile documents are encased in acid-free polyester (Mylar) film to halt deterioration while keeping originals legible to future researchers.'},
+  {ch:'S', col:'#ffaa22', nm:'SCANNING',
+   fact:'Overhead planetary scanners capture at 400+ DPI, creating permanent digital surrogates stored in Ashoka\'s institutional repository forever.'},
+  {ch:'D', col:'#ff66aa', nm:'DISPLAY',
+   fact:'UV-filtered exhibition cases with controlled humidity (45-55% RH) protect documents during public display at Ashoka University events.'},
+  {ch:'X', col:'#aa66ff', nm:'STORAGE',
+   fact:'Acid-free clamshell boxes, polyester sleeves and climate-controlled vaults at 18-20°C form the long-term preservation backbone of the Archives.'},
+];
+
+const ZONE_NAMES = [
+  'FUMIGATION WING','LAMINATION HALL','SCANNING BLOCK','DISPLAY GALLERY',
+  'STORAGE VAULT','REPAIR STUDIO','CATALOGUE ROOM','PHOTO ARCHIVE',
+  'APPRAISAL DESK','EXHIBITION HALL'
+];
+
+// ═══════════════════════════════════════════════════════════
+// DIFFICULTY TABLE — 10 levels, speed changes only
+// gc=guard count, gs=patrol speed, gcs=chase speed,
+// gi=gas interval(s/tile), gt=gas trigger dist(tiles)
+// ═══════════════════════════════════════════════════════════
+const DIFF = [
+  {gc:2, gs:0.80, gcs:1.50, gi:2.20, gt:4},   // 1
+  {gc:2, gs:0.95, gcs:1.75, gi:1.90, gt:4},   // 2
+  {gc:3, gs:1.10, gcs:2.00, gi:1.65, gt:4},   // 3
+  {gc:3, gs:1.25, gcs:2.30, gi:1.40, gt:4},   // 4
+  {gc:4, gs:1.40, gcs:2.60, gi:1.15, gt:10},  // 5
+  {gc:4, gs:1.55, gcs:2.90, gi:0.95, gt:10},  // 6
+  {gc:4, gs:1.72, gcs:3.20, gi:0.78, gt:10},  // 7
+  {gc:5, gs:1.90, gcs:3.60, gi:0.62, gt:10},  // 8
+  {gc:5, gs:2.10, gcs:4.00, gi:0.49, gt:10},  // 9
+  {gc:6, gs:2.35, gcs:4.50, gi:0.38, gt:10},  // 10
+];
+
+// ═══════════════════════════════════════════════════════════
+// SEEDED RNG — gives reproducible maze per level
+// ═══════════════════════════════════════════════════════════
+function makeRng(seed) {
+  let s = (seed ^ 0xdeadbeef) >>> 0;
+  return {
+    next() { s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) >>> 0; s = Math.imul(s ^ (s >>> 16), 0x45d9f3b) >>> 0; return (s >>> 0) / 0x100000000; },
+    int(a, b) { return a + Math.floor(this.next() * (b - a)); },
+    pick(arr) { return arr[Math.floor(this.next() * arr.length)]; },
+    shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(this.next() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAZE GENERATOR — braided, corridor-based, multi-path
+// Returns { grid, spawnR, spawnC, exitR, exitC }
+// grid: 0=floor 1=wall 2=exit 3=spike
+// ═══════════════════════════════════════════════════════════
+function generateMaze(levelIndex) {
+  // Each level gets a unique deterministic seed
+  const SEEDS = [0xA1B2,0xC3D4,0xE5F6,0x1A2B,0x3C4D,0x5E6F,0x7A8B,0x9CAD,0xBECF,0xD0E1];
+  const rng = makeRng(SEEDS[levelIndex] * 7919 + levelIndex * 1000003);
+
+  const grid = Array.from({length: ROWS}, () => new Array(COLS).fill(1));
+
+  // ── Phase 1: Recursive backtracker on 2-step grid ─────
+  const visited = Array.from({length: ROWS}, () => new Array(COLS).fill(false));
+  function carve(r, c) {
+    visited[r][c] = true;
+    grid[r][c] = 0;
+    const dirs = rng.shuffle([[0,2],[0,-2],[2,0],[-2,0]]);
+    for (const [dr, dc] of dirs) {
+      const nr = r + dr, nc = c + dc;
+      if (nr > 0 && nr < ROWS-1 && nc > 0 && nc < COLS-1 && !visited[nr][nc]) {
+        grid[r + dr/2][c + dc/2] = 0;
+        carve(nr, nc);
+      }
+    }
+  }
+  carve(1, 1);
+
+  // ── Phase 2: Braid — resolve ~65% of dead ends ────────
+  // Dead end = floor tile with exactly 1 open neighbour
+  const NB4 = [[0,1],[0,-1],[1,0],[-1,0]];
+  function openNeighbours(r, c) {
+    return NB4.filter(([dr,dc]) => {
+      const nr=r+dr, nc=c+dc;
+      return nr>=0&&nr<ROWS&&nc>=0&&nc<COLS && grid[nr][nc]===0;
+    });
+  }
+  const deadEnds = [];
+  for (let r=1;r<ROWS-1;r++) for (let c=1;c<COLS-1;c++) {
+    if (grid[r][c]===0 && openNeighbours(r,c).length===1) deadEnds.push([r,c]);
+  }
+  const toConnect = rng.shuffle(deadEnds).slice(0, Math.floor(deadEnds.length * 0.65));
+  for (const [r, c] of toConnect) {
+    const wallDirs = rng.shuffle([[0,1],[0,-1],[1,0],[-1,0]]);
+    for (const [dr, dc] of wallDirs) {
+      const wr = r+dr, wc = c+dc;
+      const nr = r+dr*2, nc = c+dc*2;
+      if (wr>0&&wr<ROWS-1&&wc>0&&wc<COLS-1 && grid[wr][wc]===1 &&
+          nr>0&&nr<ROWS-1&&nc>0&&nc<COLS-1 && grid[nr][nc]===0) {
+        grid[wr][wc] = 0;
+        break;
+      }
+    }
+  }
+
+  // ── Phase 3: Extra cross-links (level-specific count) ─
+  // Higher levels get slightly more interconnection
+  const crossCount = 12 + levelIndex * 2;
+  let tries = 0;
+  let added = 0;
+  while (added < crossCount && tries++ < 1000) {
+    const r = rng.int(1, ROWS-1);
+    const c = rng.int(1, COLS-1);
+    if (grid[r][c] !== 1) continue;
+    // Only open if it joins two already-open sides (creates loop, not dead end)
+    let openNb = 0;
+    for (const [dr,dc] of NB4) if (grid[r+dr]?.[c+dc] === 0) openNb++;
+    if (openNb >= 2) { grid[r][c] = 0; added++; }
+  }
+
+  // ── Phase 4: Spawn and Exit positions vary by level ───
+  // Spawn always top-left area; exit rotates around the maze per level
+  const spawnR = 1, spawnC = 1;
+  const exitPositions = [
+    [ROWS-2, COLS-2], // L1: bottom-right
+    [ROWS-2, 1],      // L2: bottom-left
+    [1,      COLS-2], // L3: top-right
+    [ROWS-2, Math.floor(COLS/2)], // L4: bottom-centre
+    [Math.floor(ROWS/2), COLS-2], // L5: mid-right
+    [ROWS-2, COLS-2], // L6: bottom-right (mirrored maze)
+    [1,      1+(COLS-2)],         // L7: top-right
+    [ROWS-2, 3],      // L8: bottom-left-ish
+    [Math.floor(ROWS/2), Math.floor(COLS/2)], // L9: centre
+    [ROWS-3, COLS-3], // L10: near bottom-right
+  ];
+  const [exitR, exitC] = exitPositions[levelIndex % exitPositions.length];
+
+  // Clear exit area
+  for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+    const rr=exitR+dr, cc=exitC+dc;
+    if (rr>0&&rr<ROWS&&cc>0&&cc<COLS) grid[rr][cc] = 0;
+  }
+  grid[exitR][exitC] = 2;
+
+  // Clear spawn area
+  for (let dr=0;dr<=1;dr++) for (let dc=0;dc<=1;dc++) {
+    if (spawnR+dr<ROWS && spawnC+dc<COLS) grid[spawnR+dr][spawnC+dc] = 0;
+  }
+
+  // ── Phase 5: Verify connectivity, punch path if needed ─
+  function bfsConnected(sr, sc2, er, ec) {
+    const vis = new Set(); vis.add(sr+','+sc2);
+    const q = [[sr, sc2]];
+    while (q.length) {
+      const [r, c] = q.shift();
+      if (r===er && c===ec) return true;
+      for (const [dr,dc] of NB4) {
+        const nr=r+dr, nc=c+dc, k=nr+','+nc;
+        if (nr<0||nr>=ROWS||nc<0||nc>=COLS||vis.has(k)) continue;
+        if (grid[nr][nc]===1) continue;
+        vis.add(k); q.push([nr,nc]);
+      }
+    }
+    return false;
+  }
+  // Also punch a guaranteed path if disconnected
+  if (!bfsConnected(spawnR, spawnC, exitR, exitC)) {
+    let r=spawnR, c=spawnC;
+    while(r!==exitR||c!==exitC) {
+      if(r<exitR) r++; else if(r>exitR) r--;
+      else if(c<exitC) c++; else c--;
+      if(grid[r][c]===1) grid[r][c]=0;
+    }
+    grid[exitR][exitC]=2;
+  }
+
+  // ── Phase 6: Place spikes — only on dead ends or junctions, bypass guaranteed ──
+  const spikeCount = 5 + levelIndex;  // grows slightly: L1=5 … L10=14, but capped
+  const cappedSpikes = Math.min(spikeCount, 14);
+  let spikesPlaced = 0;
+  const spikeCandidates = [];
+  for (let r=2;r<ROWS-2;r++) for (let c=2;c<COLS-2;c++) {
+    if (grid[r][c] !== 0) continue;
+    if (Math.hypot(r-spawnR, c-spawnC) < 4) continue;
+    if (Math.hypot(r-exitR,  c-exitC)  < 4) continue;
+    const nb = openNeighbours(r, c).length;
+    if (nb >= 2) spikeCandidates.push([r, c, nb]);
+  }
+  rng.shuffle(spikeCandidates);
+  for (const [r, c] of spikeCandidates) {
+    if (spikesPlaced >= cappedSpikes) break;
+    grid[r][c] = 3;
+    // Verify: path still exists from spawn to exit ignoring spikes
+    if (!bfsConnected(spawnR, spawnC, exitR, exitC)) {
+      grid[r][c] = 0; // revert
+    } else {
+      spikesPlaced++;
+    }
+  }
+
+  return { grid, spawnR, spawnC, exitR, exitC };
+}
+
+// ═══════════════════════════════════════════════════════════
+// BFS HELPERS
+// ═══════════════════════════════════════════════════════════
+const NB4 = [[0,1],[0,-1],[1,0],[-1,0]];
+
+function bfsDist(sr, sc, er, ec) {
+  if (sr===er&&sc===ec) return 0;
+  const vis = new Set(); vis.add(sr+','+sc);
+  const q = [{r:sr,c:sc,d:0}];
+  let iter = 0;
+  while (q.length && iter++ < 10000) {
+    const {r,c,d} = q.shift();
+    for (const [dr,dc] of NB4) {
+      const nr=r+dr, nc=c+dc, k=nr+','+nc;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS||vis.has(k)) continue;
+      if (map[nr][nc] === 1) continue;
+      vis.add(k);
+      if (nr===er&&nc===ec) return d+1;
+      q.push({r:nr,c:nc,d:d+1});
+    }
+  }
+  return -1;
+}
+
+function bfsPath(sr, sc, er, ec, avoidSpikes) {
+  const vis = new Set(); vis.add(sr+','+sc);
+  const q = [{r:sr,c:sc,p:null}];
+  let iter = 0;
+  while (q.length && iter++ < 10000) {
+    const cur = q.shift();
+    if (cur.r===er&&cur.c===ec) {
+      const path=[]; let n=cur;
+      while(n){path.unshift({r:n.r,c:n.c});n=n.p;}
+      return path;
+    }
+    for (const [dr,dc] of NB4) {
+      const nr=cur.r+dr, nc=cur.c+dc, k=nr+','+nc;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS||vis.has(k)) continue;
+      if (map[nr][nc]===1) continue;
+      if (avoidSpikes && map[nr][nc]===3) continue;
+      vis.add(k);
+      q.push({r:nr,c:nc,p:cur});
+    }
+  }
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════════
+let sc = 'menu'; // menu | playing | dead | lvtransition | won | paused
+let lv = 1;
+let deaths = 0, noDeath = true;
+let runStartMs = 0, lvTimer = 0, tInt = null;
+let curioCollected = 0, lvCurioCollected = 0;
+let cp = null;
+let mazeData = null, map = [], items = [], guards = [];
+let px = 1.5, py = 1.5, pdir = 1, panim = 0, pmov = false;
+let gasGrid = [], gasFrontier = [], gasActive = false, gasAccum = 0;
+let GS_R = 1, GS_C = 1;
+let kpause = false, kpT = null;
+let deathPending = false;
+let lvScore = 0; // score earned this level (for transition screen)
+
+// ═══════════════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════════════
+const LB_KEY = 'ashoka_lb_v3';
+function loadLB() { try{ return JSON.parse(localStorage.getItem(LB_KEY))||[]; }catch(e){ return []; } }
+function saveLB(e) { try{ localStorage.setItem(LB_KEY, JSON.stringify(e)); }catch(x){} }
+function recordRun(ms, cur) {
+  let e = loadLB();
+  e.push({timeMs:ms, dateISO:new Date().toISOString(), curiosity:cur, playerName:'LAZZ'});
+  e.sort((a,b)=>a.timeMs!==b.timeMs?a.timeMs-b.timeMs:b.curiosity-a.curiosity);
+  e = e.slice(0,10); saveLB(e); return e;
+}
+function fmtMs(ms) {
+  const s=Math.floor(ms/1000), m=Math.floor(s/60), ss=s%60, mss=Math.floor((ms%1000)/10);
+  return (m>0?m+'m ':'')+ss+'.'+(mss<10?'0':'')+mss+'s';
+}
+
+// ═══════════════════════════════════════════════════════════
+// BUILD LEVEL
+// ═══════════════════════════════════════════════════════════
+function buildLevel() {
+  mazeData = generateMaze(lv - 1);
+  map = mazeData.grid;
+
+  // Place ALL 5 curiosity points randomly on floor tiles (not near spawn, not near each other)
+  items = [];
+  const rng = makeRng(lv * 54321 + Date.now() % 9999); // random placement per play
+  const floorTiles = [];
+  for (let r=2;r<ROWS-2;r++) for (let c=2;c<COLS-2;c++) {
+    if (map[r][c] !== 0) continue;
+    if (Math.hypot(r - mazeData.spawnR, c - mazeData.spawnC) < 5) continue;
+    if (Math.hypot(r - mazeData.exitR,  c - mazeData.exitC)  < 4) continue;
+    // Reachable from spawn
+    if (bfsDist(mazeData.spawnR, mazeData.spawnC, r, c) < 0) continue;
+    floorTiles.push([r,c]);
+  }
+  const shuffled = rng.shuffle(floorTiles);
+  for (let i = 0; i < 5 && i < shuffled.length; i++) {
+    const [r, c] = shuffled[i];
+    // Ensure minimum spacing between items
+    if (items.some(it => Math.hypot(it.r-r, it.c-c) < 8)) {
+      // Try next candidate
+      for (let j = i+1; j < shuffled.length; j++) {
+        const [r2,c2] = shuffled[j];
+        if (!items.some(it => Math.hypot(it.r-r2, it.c-c2) < 8)) {
+          const k = KNOWLEDGE[items.length];
+          items.push({ch:k.ch,col:k.col,nm:k.nm,fact:k.fact,r:r2,c:c2,got:false});
+          break;
+        }
+      }
+    } else {
+      const k = KNOWLEDGE[items.length];
+      items.push({ch:k.ch,col:k.col,nm:k.nm,fact:k.fact,r,c,got:false});
+    }
+    if (items.length === 5) break;
+  }
+}
+
+function resetGas() {
+  gasGrid = Array.from({length:ROWS}, ()=>new Array(COLS).fill(false));
+  gasFrontier = []; gasActive = false; gasAccum = 0;
+  GS_R = mazeData.spawnR; GS_C = mazeData.spawnC;
+}
+
+function spawnEntities() {
+  px = mazeData.spawnC + 0.5;
+  py = mazeData.spawnR + 0.5;
+  pdir = 1;
+  guards = [];
+  const d = DIFF[lv-1];
+  let placed = 0, tries = 0;
+  while (placed < d.gc && tries++ < 1000) {
+    const r = 1 + Math.floor(Math.random() * (ROWS-2));
+    const c = 1 + Math.floor(Math.random() * (COLS-2));
+    if (map[r]?.[c] !== 0) continue;
+    if (Math.hypot(r-py, c-px) < 12) continue;
+    if (bfsDist(r, c, mazeData.spawnR, mazeData.spawnC) < 0) continue;
+    guards.push({x:c+0.5, y:r+0.5, dir:1, state:'patrol', path:[], ptimer:0, anim:0, alert:0});
+    placed++;
+  }
+  resetGas();
+}
+
+// ═══════════════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════════════
+const keys = {};
+wrap.setAttribute('tabindex','0');
+wrap.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (sc === 'playing') {
+    if (e.key==='r'||e.key==='R') { restartLv(); return; }
+    if (e.key==='c'||e.key==='C') { saveCP(); return; }
+    if (e.key==='Escape') { pauseGame(); return; }
+    if (kpause) { closeKP(); return; }
+  }
+  e.preventDefault();
+}, true);
+wrap.addEventListener('keyup', e => { keys[e.key] = false; });
+wrap.addEventListener('click', () => wrap.focus());
+
+// ═══════════════════════════════════════════════════════════
+// PLAYER UPDATE
+// ═══════════════════════════════════════════════════════════
+const SPD = 4.0;
+function upPlayer(dt) {
+  let dx=0, dy=0;
+  if (keys['ArrowLeft'] ||keys['a']||keys['A']) dx=-1;
+  if (keys['ArrowRight']||keys['d']||keys['D']) dx= 1;
+  if (keys['ArrowUp']   ||keys['w']||keys['W']) dy=-1;
+  if (keys['ArrowDown'] ||keys['s']||keys['S']) dy= 1;
+  if (dx&&dy) { dx*=0.707; dy*=0.707; }
+  const nx=px+dx*SPD*dt, ny=py+dy*SPD*dt;
+  if (!wHit(nx, py)) px=nx;
+  if (!wHit(px, ny)) py=ny;
+  pmov = (dx!==0||dy!==0);
+  if (dx!==0) pdir=dx>0?1:-1;
+  if (pmov) panim=(panim+dt*7)%4;
+
+  const pr=Math.floor(py), pc=Math.floor(px);
+  if (map[pr]?.[pc]===3) triggerDeath('spike');
+  if (map[pr]?.[pc]===2) triggerWin();
+
+  for (const k of items) {
+    if (!k.got && Math.hypot(k.r+0.5-py, k.c+0.5-px) < 0.85) {
+      k.got = true; curioCollected++; lvCurioCollected++;
+      showKP(k);
+    }
+  }
+}
+
+function wHit(x, y) {
+  const m = 0.28;
+  for (const [cx,cy] of [[x-m,y-m],[x+m,y-m],[x-m,y+m],[x+m,y+m]]) {
+    const r=Math.floor(cy), c=Math.floor(cx);
+    if (r<0||r>=ROWS||c<0||c>=COLS||map[r][c]===1) return true;
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GUARD UPDATE
+// ═══════════════════════════════════════════════════════════
+function upGuards(dt) {
+  const d = DIFF[lv-1];
+  const pr=Math.floor(py), pc=Math.floor(px);
+  for (const g of guards) {
+    const gr=Math.floor(g.y), gc=Math.floor(g.x);
+    const dist=Math.hypot(g.y-py, g.x-px);
+    const range = 3.5 + (lv-1)*0.4;
+    if (dist < range) {
+      if (g.state !== 'chase') playGuardAlert(); // trigger on transition to chase
+      g.state='chase'; g.alert=2.5;
+    }
+    else if (g.alert>0) { g.alert-=dt; g.state='chase'; }
+    else g.state='patrol';
+
+    g.ptimer -= dt;
+    if (g.ptimer<=0||g.path.length===0) {
+      if (g.state==='chase') {
+        g.path = bfsPath(gr,gc,pr,pc,true); g.ptimer=0.55;
+      } else {
+        let tr,tc,t=0;
+        do { tr=1+Math.floor(Math.random()*(ROWS-2)); tc=1+Math.floor(Math.random()*(COLS-2)); t++; }
+        while (map[tr]?.[tc]!==0 && t<80);
+        g.path = bfsPath(gr,gc,tr,tc,true); g.ptimer=1.5+Math.random()*2;
+      }
+    }
+    if (g.path.length>1) {
+      const nxt=g.path[1], tx=nxt.c+0.5, ty=nxt.r+0.5;
+      const ddx=tx-g.x, ddy=ty-g.y, dd=Math.hypot(ddx,ddy);
+      const spd=(g.state==='chase'?d.gcs:d.gs)*dt;
+      if (dd<0.08) g.path.shift();
+      else { g.x+=ddx/dd*spd; g.y+=ddy/dd*spd; if(Math.abs(ddx)>Math.abs(ddy)) g.dir=ddx>0?1:-1; }
+    }
+    g.anim=(g.anim+dt*5)%4;
+    if (dist<0.65) triggerDeath('guard');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// GAS UPDATE (BFS flood fill)
+// ═══════════════════════════════════════════════════════════
+function updateGas(dt) {
+  const d = DIFF[lv-1];
+  const pr=Math.floor(py), pc=Math.floor(px);
+  if (!gasActive) {
+    const pathDist = bfsDist(GS_R, GS_C, pr, pc);
+    if (pathDist >= d.gt) {
+      gasActive = true;
+      gasGrid[GS_R][GS_C] = true;
+      gasFrontier.push({r:GS_R, c:GS_C});
+    }
+    return;
+  }
+  gasAccum += dt;
+  while (gasAccum >= d.gi && gasFrontier.length > 0) {
+    gasAccum -= d.gi;
+    const tile = gasFrontier.shift();
+    for (const [dr,dc] of NB4) {
+      const nr=tile.r+dr, nc=tile.c+dc;
+      if (nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+      if (map[nr][nc]===1) continue;
+      if (gasGrid[nr][nc]) continue;
+      gasGrid[nr][nc]=true;
+      gasFrontier.push({r:nr,c:nc});
+    }
+  }
+  if (gasGrid[pr]?.[pc]) triggerDeath('gas');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEATH HANDLING
+// ═══════════════════════════════════════════════════════════
+function triggerDeath(cause) {
+  if (sc!=='playing'||deathPending) return;
+  deathPending = true;
+  deaths++; noDeath = false;
+  sc = 'dead';
+  clearInterval(tInt);
+
+  const dp = document.getElementById('deathpop');
+  const dtitle = document.getElementById('dtitle');
+  const dreason = document.getElementById('dreason');
+  const dinfo = document.getElementById('dinfo');
+
+  if (cause === 'gas') {
+    onFumigationDeath();
+    dtitle.innerHTML = `<span style="color:#22cc55">☁ YOU HAVE BEEN FUMIGATED</span>`;
+    dreason.innerHTML = `The fumigation gas overtook you in the corridors of the Archives.<br>You are being rushed to the <b style="color:#22cc55">Ashoka Infirmary</b> for treatment.`;
+    dinfo.innerHTML = `The gas origin is at your spawn point. Keep moving — don't stop in the corridors!<br><br>` +
+      `Lives remaining: <b style="color:#ffaa22">${Math.max(0,3-deaths)}</b> &nbsp;|&nbsp; Deaths this run: <b>${deaths}</b><br>` +
+      `No-death leaderboard eligibility: <b style="color:#cc3333">LOST</b>`;
+    dp.style.borderColor = '#22cc55';
+    document.getElementById('deathbox').style.borderColor = '#22cc55';
+    document.getElementById('deathbox').style.background = '#040e08';
+  } else if (cause === 'guard') {
+    dtitle.innerHTML = `<span style="color:#cc3333">⚠ YOU WERE CAUGHT!</span>`;
+    dreason.innerHTML = `A guard apprehended you in the Archives and you have been taken to the<br><b style="color:#cc3333">CADI — Committee Against Disciplinary Infractions</b>.`;
+    dinfo.innerHTML = `Avoid guards by ducking into side corridors. They move faster each level.<br><br>` +
+      `Lives remaining: <b style="color:#ffaa22">${Math.max(0,3-deaths)}</b> &nbsp;|&nbsp; Deaths this run: <b>${deaths}</b><br>` +
+      `No-death leaderboard eligibility: <b style="color:#cc3333">LOST</b>`;
+    dp.style.borderColor = '#cc3333';
+    document.getElementById('deathbox').style.borderColor = '#cc3333';
+    document.getElementById('deathbox').style.background = '#0e0404';
+  } else {
+    dtitle.innerHTML = `<span style="color:#ff8844">✦ YOU HIT A SPIKE</span>`;
+    dreason.innerHTML = `You walked directly into a spike trap hidden in the Archive corridors.<br>Always check for the <b style="color:#ff4444">red warning border</b> around spike tiles.`;
+    dinfo.innerHTML = `Spikes always have a bypass route — look for adjacent open corridors.<br><br>` +
+      `Lives remaining: <b style="color:#ffaa22">${Math.max(0,3-deaths)}</b> &nbsp;|&nbsp; Deaths this run: <b>${deaths}</b><br>` +
+      `No-death leaderboard eligibility: <b style="color:#cc3333">LOST</b>`;
+    document.getElementById('deathbox').style.borderColor = '#ff8844';
+    document.getElementById('deathbox').style.background = '#0e0804';
+  }
+
+  if (deaths >= 3) {
+    document.getElementById('dretry').textContent = '◼ NEW RUN FROM LEVEL 1';
+    document.getElementById('dretry').onclick = () => { dp.style.display='none'; startGame(); };
+    document.getElementById('drestart').style.display = 'none';
+  } else {
+    document.getElementById('dretry').textContent = '↺ TRY AGAIN — LEVEL MAZE '+lv;
+    document.getElementById('dretry').onclick = () => {
+      dp.style.display = 'none';
+      deathPending = false;
+      // Restore curio count for this level
+      curioCollected -= lvCurioCollected; lvCurioCollected=0;
+      // Reset items
+      for (const k of items) k.got=false;
+      if (cp) { px=cp.x; py=cp.y; } else { px=mazeData.spawnC+0.5; py=mazeData.spawnR+0.5; }
+      spawnEntities();
+      if (cp) { px=cp.x; py=cp.y; }
+      sc='playing'; startTimer();
+    };
+    document.getElementById('drestart').style.display='block';
+    document.getElementById('drestart').onclick = () => { dp.style.display='none'; startGame(); };
+  }
+  dp.style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEVEL WIN / TRANSITION
+// ═══════════════════════════════════════════════════════════
+function triggerWin() {
+  if (sc!=='playing') return;
+  sc='lvtransition';
+  playPickupSound();
+  clearInterval(tInt);
+
+  const bonus = Math.max(0, 500 - lvTimer*3) + lvCurioCollected*50;
+  lvScore = bonus;
+
+  if (lv >= 10) {
+    // Full run complete
+    const totalMs = Date.now() - runStartMs;
+    const entries = noDeath ? recordRun(totalMs, curioCollected) : loadLB();
+    const ndMsg = noDeath
+      ? `<div style="color:#22cc55;margin:8px 0;font-size:12px;">🏆 NO-DEATH RUN COMPLETE!<br>Time: <b>${fmtMs(totalMs)}</b></div>`
+      : `<div style="color:#cc3333;margin:8px 0;">Run completed with ${deaths} death${deaths>1?'s':''} — no-death not eligible</div>`;
+    let lbHtml='';
+    if (entries.length) {
+      lbHtml=`<div style="margin:10px 0 4px;color:#c8a84b;font-size:10px;font-weight:bold;">TOP NO-DEATH TIMES</div>`;
+      for(let i=0;i<Math.min(entries.length,5);i++){
+        const e=entries[i];
+        lbHtml+=`<div style="font-size:9px;padding:2px 0;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
+          `${i+1}. ${e.playerName} — ${fmtMs(e.timeMs)} · ★${e.curiosity}</div>`;
+      }
+    }
+    showMainOv(
+      `<h1 style="color:#22cc55">ARCHIVES COMPLETE!</h1>`+
+      `<div class="sub">ALL 10 LEVEL MAZES CLEARED</div>`+
+      ndMsg+
+      `<div style="margin:6px 0 14px;font-size:11px;">★ Curiosity: <b>${curioCollected}/50</b> &nbsp;|&nbsp; Time: <b>${fmtMs(totalMs)}</b></div>`+
+      lbHtml+`<br>`+
+      `<button class="btn g" onclick="startGame()">▶ NEW RUN</button>`+
+      `<button class="btn sm" onclick="showLBScreen()">🏆 LEADERBOARD</button>`
+    );
+    return;
+  }
+
+  // Show level transition screen
+  const lvpop = document.getElementById('lvpop');
+  document.getElementById('lvnum').textContent = `LEVEL MAZE ${lv} COMPLETE`;
+  document.getElementById('lvnum').style.fontSize = '18px';
+  document.getElementById('lvnum').style.color = '#22cc55';
+  document.getElementById('lvname').textContent = ZONE_NAMES[lv-1];
+
+  const nextDiff = DIFF[lv]; // next level's difficulty
+  document.getElementById('lvstats').innerHTML =
+    `Curiosity Points collected: <b style="color:#ffaa22">${lvCurioCollected}/5</b><br>`+
+    `Level time: <b>${lvTimer}s</b> &nbsp;|&nbsp; Bonus: <b>+${lvScore}</b><br>`+
+    `Total curiosity: <b style="color:#ffaa22">★ ${curioCollected}</b><br><br>`+
+    `<span style="color:#c8a84b">— NEXT: LEVEL MAZE ${lv+1} — ${ZONE_NAMES[lv]} —</span><br>`+
+    `<span style="font-size:9px;color:#555;">`+
+    `Guards: ${nextDiff.gc} &nbsp;|&nbsp; Guard speed: ×${nextDiff.gcs.toFixed(2)} &nbsp;|&nbsp; Gas spread: ${nextDiff.gi.toFixed(2)}s/tile</span>`;
+
+  document.getElementById('lvnext').textContent = `▶ ENTER LEVEL MAZE ${lv+1}`;
+  document.getElementById('lvnext').onclick = () => {
+    lvpop.style.display = 'none';
+    lv++;
+    lvTimer=0; lvCurioCollected=0; cp=null;
+    buildLevel(); spawnEntities(); sc='playing'; startTimer();
+    notify(`LEVEL MAZE ${lv} — ${ZONE_NAMES[lv-1]}`, 2500);
+  };
+  lvpop.style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function saveCP() {
+  if (sc!=='playing') return;
+  const r=Math.floor(py), c=Math.floor(px);
+  if (map[r]?.[c]===0) { cp={x:px,y:py}; notify('✓ CHECKPOINT SAVED',1500); }
+}
+
+function startTimer() { clearInterval(tInt); tInt=setInterval(()=>lvTimer++,1000); }
+
+function showKP(k) {
+  // Show image popup for 2s (freeze + audio), THEN show text card
+  showImagePopup(k);
+  // Schedule the text card to appear after image popup closes
+  setTimeout(() => {
+    kpause=true;
+    document.getElementById('kpt').textContent=`[${k.ch}] ${k.nm} — Curiosity Point!`;
+    document.getElementById('kpt').style.color=k.col;
+    document.getElementById('kpb').textContent=k.fact;
+    document.getElementById('kp').style.borderColor=k.col;
+    document.getElementById('kp').style.display='block';
+    clearTimeout(kpT); kpT=setTimeout(closeKP,5000);
+  }, 2100); // after image popup closes
+}
+function closeKP() { kpause=false; document.getElementById('kp').style.display='none'; }
+
+function showMainOv(html) {
+  document.getElementById('ovbox').innerHTML = html;
+  document.getElementById('ov').style.display = 'flex';
+}
+
+function pauseGame() {
+  if (sc!=='playing') return;
+  sc='paused'; clearInterval(tInt);
+  showMainOv(
+    `<h1>PAUSED</h1>`+
+    `<div class="sub">LEVEL MAZE ${lv} — ${ZONE_NAMES[lv-1]}</div>`+
+    `<div style="font-size:11px;margin-bottom:14px;">Time: ${lvTimer}s &nbsp;|&nbsp; ★ ${curioCollected} curiosity &nbsp;|&nbsp; Deaths: ${deaths}</div>`+
+    `<button class="btn g" onclick="resumeGame()">▶ RESUME</button>`+
+    `<button class="btn sm" onclick="restartLv()">↺ RESTART LEVEL MAZE ${lv}</button>`+
+    `<button class="btn sm" onclick="showLBScreen()">🏆 LEADERBOARD</button>`+
+    `<button class="btn sm r" onclick="startGame()">◼ NEW RUN</button>`
+  );
+}
+function resumeGame() { sc='playing'; document.getElementById('ov').style.display='none'; startTimer(); }
+
+function showLBScreen() {
+  const entries=loadLB();
+  let html=`<h1>NO-DEATH LEADERBOARD</h1>`+
+    `<div class="sub">COMPLETE ALL 10 LEVEL MAZES WITHOUT DYING</div>`;
+  if (!entries.length) {
+    html+=`<p style="color:#555;text-align:center;">No entries yet!<br>Complete all 10 levels without dying to appear here.</p>`;
+  } else {
+    for(let i=0;i<entries.length;i++){
+      const e=entries[i], d=new Date(e.dateISO);
+      html+=`<div style="font-size:10px;padding:4px 0;border-bottom:1px solid #111;text-align:left;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
+        `${i+1}. ${e.playerName} — ${fmtMs(e.timeMs)} &nbsp;|&nbsp; ★${e.curiosity} &nbsp;|&nbsp; ${d.getMonth()+1}/${d.getDate()}</div>`;
+    }
+  }
+  html+=`<br><button class="btn sm" onclick="backFromLB()">◀ BACK</button>`;
+  showMainOv(html);
+}
+function backFromLB() {
+  if (sc==='playing'||sc==='paused') resumeGame();
+  else { sc='menu'; showMainOv(mainMenuHTML()); }
+}
+
+let msgT=null;
+function notify(msg, dur=2000) {
+  const n=document.getElementById('msg');
+  n.textContent=msg; n.style.display='block';
+  clearTimeout(msgT); msgT=setTimeout(()=>n.style.display='none',dur);
+}
+
+function mainMenuHTML() {
+  return `<h1>ASHOKA ARCHIVES</h1><h2>THE MAZE · 10 LEVELS</h2>`+
+    `<p>You are <b style="color:#c8a84b">LAZZ</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>`+
+    `<span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be sent to the Infirmary!<br>`+
+    `<span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>`+
+    `All 5 Curiosity Points are always available each level.<br>`+
+    `Multiple routes always exist. Spikes always have bypasses.</p>`+
+    `<button class="btn g" onclick="startGame()">▶ ENTER ARCHIVES — LEVEL MAZE 1</button>`+
+    `<button class="btn sm" onclick="showLBScreen()">🏆 NO-DEATH LEADERBOARD</button>`+
+    `<div style="font-size:9px;color:#333;margin-top:4px;">WASD/ARROWS · R=Restart · C=Checkpoint · ESC=Pause</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════════════════
+const ZTC=[
+  'rgba(34,204,85,0.04)','rgba(85,153,255,0.04)','rgba(255,170,34,0.04)',
+  'rgba(255,102,170,0.04)','rgba(170,102,255,0.04)','rgba(255,136,51,0.04)',
+  'rgba(51,204,255,0.04)','rgba(204,255,51,0.03)','rgba(255,85,255,0.04)','rgba(85,255,204,0.04)'
+];
+
+// Camera follows player
+let camX=0, camY=0;
+function updateCamera() {
+  const vpW=CW, vpH=CH-OY;
+  camX = Math.max(0, Math.min(COLS*TILE - vpW, px*TILE - vpW/2));
+  camY = Math.max(0, Math.min(ROWS*TILE - vpH, py*TILE - vpH/2));
+}
+
+function drawGame() {
+  ctx.clearRect(0,0,CW,CH);
+  ctx.fillStyle='#05050e'; ctx.fillRect(0,OY,CW,CH-OY);
+  updateCamera();
+
+  ctx.save();
+  ctx.translate(-camX, OY - camY);
+
+  // Zone tint
+  ctx.fillStyle = ZTC[(lv-1)%10];
+  ctx.fillRect(camX, camY, CW, CH-OY);
+
+  // Tiles (only visible range)
+  const r0=Math.max(0,Math.floor(camY/TILE)-1);
+  const r1=Math.min(ROWS, r0+Math.ceil((CH-OY)/TILE)+2);
+  const c0=Math.max(0,Math.floor(camX/TILE)-1);
+  const c1=Math.min(COLS, c0+Math.ceil(CW/TILE)+2);
+
+  for (let r=r0;r<r1;r++) for (let c=c0;c<c1;c++) {
+    const tx=c*TILE, ty=r*TILE, tl=map[r]?.[c];
+    if (tl===1) {
+      ctx.fillStyle='#121224'; ctx.fillRect(tx,ty,TILE,TILE);
+      ctx.fillStyle='rgba(200,168,75,0.07)';
+      ctx.fillRect(tx,ty,TILE,2);
+      ctx.fillRect(tx,ty,2,TILE);
+    } else if (tl===0) {
+      ctx.fillStyle=(r+c)%2===0?'#0a0a18':'#0d0d1e'; ctx.fillRect(tx,ty,TILE,TILE);
+    } else if (tl===2) {
+      ctx.fillStyle='#051005'; ctx.fillRect(tx,ty,TILE,TILE);
+      ctx.strokeStyle='#22cc55'; ctx.lineWidth=2;
+      ctx.strokeRect(tx+2,ty+2,TILE-4,TILE-4);
+      ctx.fillStyle='#22cc55';
+      ctx.font=`bold ${TILE-4}px monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('E', tx+TILE/2, ty+TILE/2);
+      // Pulsing glow
+      const pulse = 0.3+0.2*Math.sin(Date.now()*0.006);
+      ctx.fillStyle=`rgba(34,204,85,${pulse})`;
+      ctx.fillRect(tx+2,ty+2,TILE-4,TILE-4);
+      ctx.fillStyle='#22cc55';
+      ctx.font=`bold ${TILE-4}px monospace`;
+      ctx.fillText('E', tx+TILE/2, ty+TILE/2);
+    } else if (tl===3) {
+      ctx.fillStyle='#160404'; ctx.fillRect(tx,ty,TILE,TILE);
+      drawSpike(tx+TILE/2, ty+TILE/2, TILE*0.3);
+      ctx.strokeStyle='rgba(255,60,60,0.35)'; ctx.lineWidth=1;
+      ctx.strokeRect(tx+1,ty+1,TILE-2,TILE-2);
+    }
+  }
+
+  // Gas tiles
+  for (let r=r0;r<r1;r++) for (let c=c0;c<c1;c++) {
+    if (gasGrid[r]?.[c]) {
+      ctx.fillStyle='rgba(28,200,75,0.48)';
+      ctx.fillRect(c*TILE, r*TILE, TILE, TILE);
+    }
+  }
+
+  // Gas source pulse (pre-activation)
+  if (!gasActive) {
+    const pulse = 0.18+0.12*Math.sin(Date.now()*0.005);
+    ctx.fillStyle=`rgba(28,200,75,${pulse})`;
+    ctx.fillRect(GS_C*TILE, GS_R*TILE, TILE, TILE);
+  }
+
+  // Checkpoint
+  if (cp) {
+    ctx.strokeStyle='#4488ff'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.strokeRect(Math.floor(cp.x)*TILE+2, Math.floor(cp.y)*TILE+2, TILE-4, TILE-4);
+    ctx.setLineDash([]);
+  }
+
+  // Curiosity items
+  const now = Date.now();
+  for (const k of items) {
+    if (!k.got) {
+      const kx=k.c*TILE, ky=k.r*TILE;
+      const p=Math.sin(now*0.0035)*2.5;
+      ctx.fillStyle=k.col+'25';
+      ctx.beginPath(); ctx.arc(kx+TILE/2,ky+TILE/2,TILE/2+p,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle=k.col+'80'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(kx+TILE/2,ky+TILE/2,TILE/2+p,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle=k.col;
+      ctx.font=`bold ${TILE-2}px monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(k.ch, kx+TILE/2, ky+TILE/2);
+    }
+  }
+
+  // Guards
+  for (const g of guards) drawGuard(g);
+
+  // Player
+  drawPlayer();
+
+  ctx.restore();
+
+  // Minimap overlay
+  drawMinimap();
+
+  // HUD
+  drawHUD();
+}
+
+function drawSpike(x,y,r) {
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle='#cc2222'; ctx.strokeStyle='#ff5555'; ctx.lineWidth=1;
+  for(let i=0;i<4;i++){
+    ctx.save(); ctx.rotate(i*Math.PI/2);
+    ctx.beginPath(); ctx.moveTo(0,-r); ctx.lineTo(r*0.35,0); ctx.lineTo(-r*0.35,0);
+    ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawPlayer() {
+  const wx=px*TILE, wy=py*TILE, bob=pmov?Math.sin(panim*Math.PI)*2:0;
+  ctx.save(); ctx.translate(wx, wy+bob);
+  ctx.fillStyle='rgba(0,0,0,0.22)';
+  ctx.beginPath(); ctx.ellipse(0,7,8,4,0,0,Math.PI*2); ctx.fill();
+  ctx.scale(pdir,1);
+  ctx.fillStyle='#b89038'; ctx.fillRect(-7,-9,14,12);
+  ctx.fillStyle='#e8c880'; ctx.beginPath(); ctx.arc(0,-14,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#333';    ctx.beginPath(); ctx.arc(3,-15,1.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#7a5018'; ctx.fillRect(5,-8,5,9);
+  ctx.fillStyle='#05050e'; ctx.font='bold 7px monospace';
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('L',0,-3);
+  ctx.restore();
+  ctx.font='6px monospace'; ctx.fillStyle='#c8a84b'; ctx.textAlign='center';
+  ctx.fillText('LAZZ', wx, py*TILE-22);
+}
+
+function drawGuard(g) {
+  const gx=g.x*TILE, gy=g.y*TILE;
+  const bob=Math.sin(g.anim*Math.PI)*1.5;
+  const chase=g.state==='chase';
+  ctx.save(); ctx.translate(gx, gy+bob);
+  ctx.fillStyle='rgba(0,0,0,0.22)';
+  ctx.beginPath(); ctx.ellipse(0,7,8,4,0,0,Math.PI*2); ctx.fill();
+  ctx.scale(g.dir,1);
+  ctx.fillStyle=chase?'#cc2020':'#7a1818'; ctx.fillRect(-7,-9,14,12);
+  ctx.fillStyle='#bb9080'; ctx.beginPath(); ctx.arc(0,-14,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#3a0808'; ctx.fillRect(-7,-20,14,7);
+  ctx.fillStyle=chase?'#ff4444':'#222'; ctx.beginPath(); ctx.arc(3,-15,1.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffaa00'; ctx.beginPath(); ctx.arc(0,-2,2.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  if (chase) {
+    ctx.fillStyle='#ff4444'; ctx.font='9px monospace'; ctx.textAlign='center';
+    ctx.fillText('!', gx, g.y*TILE-25);
+    ctx.strokeStyle='rgba(255,60,60,0.1)'; ctx.lineWidth=1; ctx.setLineDash([3,6]);
+    ctx.beginPath(); ctx.arc(gx, g.y*TILE, (3.5+(lv-1)*0.4)*TILE, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawMinimap() {
+  const mm=3, mmW=COLS*mm, mmH=ROWS*mm;
+  const mx=CW-mmW-3, my=1;
+  ctx.fillStyle='rgba(0,0,0,0.75)';
+  ctx.fillRect(mx-1,my-1,mmW+2,mmH+2);
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const tl=map[r]?.[c];
+    if(tl===1) continue;
+    let col2=tl===2?'#22cc55':tl===3?'#cc2222':gasGrid[r]?.[c]?'rgba(28,200,75,0.7)':'#1a1a30';
+    ctx.fillStyle=col2;
+    ctx.fillRect(mx+c*mm, my+r*mm, mm, mm);
+  }
+  for(const g of guards){ ctx.fillStyle='#ff4444'; ctx.fillRect(mx+Math.floor(g.x)*mm, my+Math.floor(g.y)*mm, mm+1,mm+1); }
+  for(const k of items){ if(!k.got){ ctx.fillStyle=k.col; ctx.fillRect(mx+k.c*mm,my+k.r*mm,mm+1,mm+1); } }
+  ctx.fillStyle='#c8a84b';
+  ctx.fillRect(mx+Math.floor(px)*mm, my+Math.floor(py)*mm, mm+1,mm+1);
+}
+
+function drawHUD() {
+  const livesLeft=Math.max(0,3-deaths);
+  const hearts='♥'.repeat(livesLeft)+'♡'.repeat(3-livesLeft);
+  const nd=noDeath?'<span style="color:#22cc55">ND✓</span>':'<span style="color:#cc3333">ND✗</span>';
+  const gasLbl=gasActive?'<span style="color:#22cc55">GAS▲</span>':'<span style="color:#444">gas…</span>';
+  const elapsed=Date.now()-runStartMs;
+  const m=Math.floor(elapsed/60000), s=Math.floor((elapsed%60000)/1000);
+  const timeStr=(m>0?m+'m ':'')+s+'s';
+  const curioPct=`★${curioCollected}`;
+  document.getElementById('hud').innerHTML=
+    `<span>LEVEL MAZE ${lv}/10 · ${ZONE_NAMES[lv-1]}</span>`+
+    `<span>${timeStr} · ${curioPct} · ${gasLbl}</span>`+
+    `<span>${hearts} · ${nd}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GAME CONTROL
+// ═══════════════════════════════════════════════════════════
+let lastTs=0, raf=null;
+function loop(ts) {
+  const dt=Math.min((ts-lastTs)/1000, 0.05); lastTs=ts;
+  if (sc==='playing'&&!kpause) { upPlayer(dt); upGuards(dt); updateGas(dt); }
+  if (sc==='playing') drawGame();
+  raf=requestAnimationFrame(loop);
+}
+
+function startGame() {
+  sc='playing'; lv=1; deaths=0; noDeath=true;
+  curioCollected=0; lvCurioCollected=0; lvTimer=0; cp=null;
+  deathPending=false; runStartMs=Date.now();
+  document.getElementById('ov').style.display='none';
+  document.getElementById('deathpop').style.display='none';
+  document.getElementById('lvpop').style.display='none';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('kp').style.display='none';
+  buildLevel(); spawnEntities(); startTimer();
+  wrap.focus();
+  notify(`LEVEL MAZE 1 — ${ZONE_NAMES[0]} — All 5 Curiosity Points scattered!`,3000);
+  if (!raf) { lastTs=performance.now(); loop(lastTs); }
+}
+
+function restartLv() {
+  if (deathPending) return;
+  curioCollected-=lvCurioCollected; lvCurioCollected=0; lvTimer=0; cp=null;
+  document.getElementById('ov').style.display='none';
+  document.getElementById('deathpop').style.display='none';
+  document.getElementById('lvpop').style.display='none';
+  document.getElementById('kp').style.display='none';
+  kpause=false;
+  buildLevel(); spawnEntities(); sc='playing'; startTimer();
+  notify(`LEVEL MAZE ${lv} — ${ZONE_NAMES[lv-1]} — RESTARTED`, 2000);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════════════════════════
+const bgm       = new Audio('assets/90s_NINTENDO__Video_Game_Beat_.mp3');
+const sndAlert  = new Audio('assets/Guard_alert_audio.mp3');
+const sndPickup = new Audio('assets/exit-and-curious-point-audio-effect.mp3');
+bgm.loop = true;
+bgm.volume = 0.55;
+sndAlert.volume = 0.9;
+sndPickup.volume = 0.9;
+
+let bgmStarted  = false;   // BGM only starts on first user interaction
+let bgmMuteT    = null;    // timeout to unmute BGM
+let alertCooldown = 0;     // prevent rapid re-triggers
+
+function startBGM() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+  bgm.currentTime = 0;
+  bgm.play().catch(()=>{});
+}
+function restartBGM() {
+  bgm.pause();
+  bgm.currentTime = 0;
+  bgm.play().catch(()=>{});
+}
+function muteBGMFor(seconds) {
+  bgm.volume = 0;
+  clearTimeout(bgmMuteT);
+  bgmMuteT = setTimeout(() => { bgm.volume = 0.55; }, seconds * 1000);
+}
+
+// Called when a guard enters chase state (once per guard per alert)
+function playGuardAlert() {
+  const now = performance.now();
+  if (now - alertCooldown < 8000) return; // 8s cooldown to avoid spam
+  alertCooldown = now;
+  muteBGMFor(7);
+  sndAlert.currentTime = 0;
+  sndAlert.play().catch(()=>{});
+}
+
+// Called on curiosity pickup OR level exit
+function playPickupSound() {
+  muteBGMFor(2);
+  sndPickup.currentTime = 0;
+  sndPickup.play().catch(()=>{});
+}
+
+// On fumigation death: restart BGM
+function onFumigationDeath() {
+  restartBGM();
+}
+
+// Start BGM on first keydown or click
+function ensureBGM() { startBGM(); }
+wrap.addEventListener('keydown', ensureBGM, {once:true});
+wrap.addEventListener('click',   ensureBGM, {once:true});
+
+// ═══════════════════════════════════════════════════════════
+// IMAGE POPUP SYSTEM
+// ═══════════════════════════════════════════════════════════
+const ITEM_IMAGES = {
+  'F': 'assets/SCANNING2.jpeg',   // Fumigation placeholder
+  'L': 'assets/LAMINATION2.jpeg',
+  'S': 'assets/SCANNING.jpeg',
+  'D': 'assets/DISPLAY.jpeg',
+  'X': 'assets/STORAGE11.jpeg',
+};
+
+let imgPopActive = false;
+let imgPopT = null;
+
+function showImagePopup(item) {
+  const imgSrc = ITEM_IMAGES[item.ch];
+  if (!imgSrc) return;
+
+  imgPopActive = true;
+  // Freeze everything: kpause already handles game loop pause
+  kpause = true;
+
+  // Play pickup sound + mute BGM
+  playPickupSound();
+
+  // Show overlay
+  const pop = document.getElementById('imgpop');
+  document.getElementById('imgpop-img').src   = imgSrc;
+  document.getElementById('imgpop-title').textContent = item.nm.toUpperCase();
+  document.getElementById('imgpop-title').style.color = item.col;
+  document.getElementById('imgpop-fact').textContent  = item.fact;
+  pop.style.display = 'flex';
+
+  // Auto-dismiss after 2 seconds
+  clearTimeout(imgPopT);
+  imgPopT = setTimeout(() => {
+    pop.style.display = 'none';
+    imgPopActive = false;
+    kpause = false;
+  }, 2000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// IDLE SCREENSAVER (10s no movement)
+// ═══════════════════════════════════════════════════════════
+let lastMoveTime = performance.now();
+let idleActive   = false;
+let idleT        = null;
+
+function resetIdleTimer() {
+  lastMoveTime = performance.now();
+  if (idleActive) dismissIdle();
+}
+
+function checkIdle() {
+  if (sc !== 'playing') return;
+  if (imgPopActive) return;
+  const elapsed = (performance.now() - lastMoveTime) / 1000;
+  if (elapsed >= 10 && !idleActive) {
+    idleActive = true;
+    kpause = true;
+    bgm.volume = 0.18; // soft-duck BGM during idle
+    document.getElementById('idlepop').style.display = 'flex';
+  }
+}
+
+function dismissIdle() {
+  if (!idleActive) return;
+  idleActive = false;
+  kpause = false;
+  bgm.volume = 0.55;
+  document.getElementById('idlepop').style.display = 'none';
+  resetIdleTimer();
+}
+
+// Check idle every second
+setInterval(checkIdle, 1000);
+
+// Reset idle timer on any movement key
+wrap.addEventListener('keydown', (e) => {
+  const moveKeys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','A','d','D','w','W','s','S'];
+  if (moveKeys.includes(e.key)) resetIdleTimer();
+  if (idleActive) dismissIdle();
+}, true);
+wrap.addEventListener('click', () => { if (idleActive) dismissIdle(); resetIdleTimer(); });
+
+
+// Wire buttons
+document.getElementById('startbtn').onclick = ()=>startGame();
+document.getElementById('lbbtn').onclick    = ()=>showLBScreen();
+
+// Start loop idle
+lastTs=performance.now(); loop(lastTs);
+})();
+</script>
+</body>
+</html>
