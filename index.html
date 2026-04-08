@@ -5,86 +5,128 @@
 <title>Ashoka Archives</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#05050e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;}
-#wrap{position:relative;background:#05050e;border:2px solid #c8a84b;box-shadow:0 0 50px rgba(200,168,75,0.18);}
+body{background:#05050e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;zoom:0.8;}
+#outer{display:flex;align-items:flex-start;gap:0;background:#05050e;box-shadow:0 0 60px rgba(200,168,75,0.15);}
+#sidebar-left{width:160px;min-height:100%;background:#080816;border:2px solid #c8a84b;border-right:none;padding:12px 10px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;}
+#sidebar-right{width:160px;min-height:100%;background:#080816;border:2px solid #c8a84b;border-left:none;padding:12px 10px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;}
+#wrap{position:relative;background:#05050e;border:2px solid #c8a84b;flex-shrink:0;}
+
+/* Sidebar common */
+.sb-title{color:#c8a84b;font-size:16px;letter-spacing:2px;font-weight:bold;text-align:center;border-bottom:1px solid rgba(200,168,75,0.25);padding-bottom:5px;margin-bottom:6px;}
+.legend-item{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:15px;color:#c0b090;}
+.legend-swatch{width:12px;height:12px;flex-shrink:0;border-radius:2px;}
+.legend-swatch.wall{background:#13122a;border:1px solid rgba(200,168,75,0.25);}
+.legend-swatch.floor{background:#1e1a2e;border:1px solid #2a2845;}
+.legend-swatch.exit{background:#22cc55;}
+.legend-swatch.spike{background:#cc2222;}
+.legend-swatch.gas{background:rgba(28,200,75,0.7);}
+.legend-swatch.item{background:#ffaa22;}
+.legend-swatch.guard{background:#cc2020;}
+.legend-swatch.player{background:#c8a84b;}
+.legend-swatch.cp{background:#4488ff;border:1px dashed #4488ff;}
+
+/* Minimap in right sidebar */
+#minimap-canvas{display:block;margin:0 auto;border:1px solid rgba(200,168,75,0.3);}
+
+/* Stamina bar */
+#stamina-wrap{margin-top:4px;}
+#stamina-bar-bg{width:100%;height:12px;background:#111126;border:1px solid rgba(200,168,75,0.3);border-radius:6px;overflow:hidden;}
+#stamina-bar-fill{height:100%;width:100%;background:linear-gradient(90deg,#2244cc,#44aaff);border-radius:6px;transition:width 0.1s;}
+#stamina-status{font-size:15px;color:#88aadd;text-align:center;margin-top:3px;}
+#stamina-sprint{font-size:13px;color:#44aaff;text-align:center;display:none;}
 canvas{display:block;}
 
 /* HUD */
-#hud{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:space-between;padding:0 10px;font-size:10px;color:#c8a84b;z-index:4;pointer-events:none;border-bottom:1px solid rgba(200,168,75,0.2);}
+#hud{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:space-between;padding:0 10px;font-size:14px;color:#c8a84b;z-index:4;pointer-events:none;border-bottom:1px solid rgba(200,168,75,0.2);}
 
 /* Overlay */
 #ov{position:absolute;inset:0;background:rgba(0,0,0,0.93);display:flex;align-items:center;justify-content:center;z-index:10;}
-#ovbox{border:2px solid #c8a84b;background:#0b0b1c;padding:28px 32px;width:360px;text-align:center;color:#e0d8c0;font-size:11px;line-height:1.9;max-height:90vh;overflow-y:auto;}
-#ovbox h1{color:#c8a84b;font-size:16px;font-weight:bold;margin-bottom:4px;}
-#ovbox h2{color:#444;font-size:9px;letter-spacing:3px;margin-bottom:14px;}
-#ovbox .sub{font-size:9px;color:#555;margin-bottom:12px;}
-#ovbox p{font-size:10px;text-align:left;margin-bottom:12px;line-height:1.8;}
+#ovbox{border:2px solid #c8a84b;background:#0b0b1c;padding:28px 32px;width:360px;text-align:center;color:#e0d8c0;font-size:15px;line-height:1.9;}
+#ovbox h1{color:#c8a84b;font-size:22px;font-weight:bold;margin-bottom:4px;}
+#ovbox h2{color:#444;font-size:13px;letter-spacing:3px;margin-bottom:14px;}
+#ovbox .sub{font-size:13px;color:#555;margin-bottom:12px;}
+#ovbox p{font-size:14px;text-align:left;margin-bottom:12px;line-height:1.8;}
 
 /* Buttons */
-.btn{padding:9px 0;font-size:11px;font-family:'Courier New',monospace;font-weight:bold;cursor:pointer;display:block;width:100%;margin-bottom:7px;border:1.5px solid #c8a84b;background:transparent;color:#c8a84b;transition:all 0.1s;}
+.btn{padding:9px 0;font-size:15px;font-family:'Courier New',monospace;font-weight:bold;cursor:pointer;display:block;width:100%;margin-bottom:7px;border:1.5px solid #c8a84b;background:transparent;color:#c8a84b;transition:all 0.1s;}
 .btn:hover,.btn:active{background:#c8a84b;color:#000;}
 .btn.g{border-color:#22cc55;color:#22cc55;background:rgba(34,204,85,0.05);}
 .btn.g:hover,.btn.g:active{background:#22cc55;color:#000;}
 .btn.r{border-color:#cc3333;color:#cc3333;background:rgba(204,51,51,0.05);}
 .btn.r:hover{background:#cc3333;color:#fff;}
-.btn.sm{font-size:9px;padding:6px 0;margin-bottom:5px;}
+.btn.sm{font-size:13px;padding:6px 0;margin-bottom:5px;}
 
 /* Death popup */
 #deathpop{position:absolute;inset:0;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;z-index:12;}
 #deathbox{border:2px solid #cc3333;background:#120505;padding:28px 32px;width:340px;text-align:center;color:#e0d8c0;}
-#deathbox .dtitle{font-size:16px;font-weight:bold;margin-bottom:8px;}
-#deathbox .dreason{font-size:11px;margin-bottom:10px;line-height:1.7;}
-#deathbox .dinfo{font-size:10px;color:#888;margin-bottom:16px;line-height:1.7;}
+#deathbox .dtitle{font-size:22px;font-weight:bold;margin-bottom:8px;}
+#deathbox .dreason{font-size:15px;margin-bottom:10px;line-height:1.7;}
+#deathbox .dinfo{font-size:14px;color:#888;margin-bottom:16px;line-height:1.7;}
 
 /* Level transition */
 #lvpop{position:absolute;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:11;}
 #lvbox{border:2px solid #22cc55;background:#041008;padding:32px 36px;width:340px;text-align:center;color:#e0d8c0;}
-#lvbox .lnum{font-size:28px;font-weight:bold;color:#22cc55;margin-bottom:6px;}
-#lvbox .lname{font-size:11px;color:#c8a84b;letter-spacing:3px;margin-bottom:16px;}
-#lvbox .lstats{font-size:10px;color:#888;margin-bottom:18px;line-height:1.8;}
+#lvbox .lnum{font-size:38px;font-weight:bold;color:#22cc55;margin-bottom:6px;}
+#lvbox .lname{font-size:15px;color:#c8a84b;letter-spacing:3px;margin-bottom:16px;}
+#lvbox .lstats{font-size:14px;color:#888;margin-bottom:18px;line-height:1.8;}
 
 /* Notification */
-#msg{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.94);border:1px solid #c8a84b;color:#c8a84b;padding:5px 16px;font-size:10px;display:none;z-index:8;white-space:nowrap;max-width:95%;text-align:center;pointer-events:none;}
+#msg{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.94);border:1px solid #c8a84b;color:#c8a84b;padding:5px 16px;font-size:14px;display:none;z-index:8;white-space:nowrap;max-width:95%;text-align:center;pointer-events:none;}
 
 /* Knowledge popup */
-#kp{position:absolute;bottom:34px;left:8px;right:8px;background:#070e0a;border:2px solid #22cc55;padding:12px 15px;font-size:10px;line-height:1.75;display:none;z-index:9;}
-#kpt{font-weight:bold;font-size:11px;margin-bottom:5px;}
-#kpb{font-size:10px;color:#c8c0b0;}
-#kps{font-size:9px;color:#444;margin-top:7px;}
+#kp{position:absolute;bottom:34px;left:8px;right:8px;background:#070e0a;border:2px solid #22cc55;padding:12px 15px;font-size:14px;line-height:1.75;display:none;z-index:9;}
+#kpt{font-weight:bold;font-size:15px;margin-bottom:5px;}
+#kpb{font-size:14px;color:#c8c0b0;}
+#kps{font-size:13px;color:#444;margin-top:7px;}
 
 /* Image popup overlay */
 #imgpop {
   position:absolute;inset:0;z-index:20;display:none;
-  align-items:center;justify-content:center;flex-direction:column;
+  align-items:stretch;justify-content:center;flex-direction:row;
+  padding:20px;gap:18px;cursor:pointer;
 }
 #imgpop .blur-bg {
   position:absolute;inset:0;
-  backdrop-filter:blur(8px);
-  background:rgba(0,0,0,0.72);
+  backdrop-filter:blur(10px);
+  background:rgba(0,0,0,0.87);
 }
 #imgpop .img-frame {
   position:relative;z-index:2;
-  max-width:82%;max-height:62%;
+  flex-shrink:0;width:40%;
   border:2px solid #c8a84b;
-  box-shadow:0 0 40px rgba(0,0,0,0.8);
+  box-shadow:0 0 50px rgba(0,0,0,0.95);
 }
 #imgpop .img-frame img {
-  display:block;width:100%;max-height:340px;object-fit:cover;
+  display:block;width:100%;height:100%;object-fit:cover;
 }
 #imgpop .img-caption {
   position:relative;z-index:2;
-  margin-top:14px;text-align:center;
-  color:#e0d8c0;font-family:'Courier New',monospace;
-  max-width:82%;
+  flex:1;display:flex;flex-direction:column;
+  background:rgba(4,4,18,0.95);
+  border:1px solid rgba(200,168,75,0.35);
+  padding:18px 20px;
 }
 #imgpop .img-caption .cap-title {
-  font-size:14px;font-weight:bold;color:#c8a84b;margin-bottom:6px;
+  font-size:17px;font-weight:bold;
+  margin-bottom:10px;padding-bottom:8px;
+  border-bottom:1px solid rgba(200,168,75,0.25);
+  flex-shrink:0;font-family:'Courier New',monospace;
 }
 #imgpop .img-caption .cap-fact {
-  font-size:10px;line-height:1.7;color:#b0a898;
+  font-size:12px;line-height:1.85;color:#c8c0b0;
+  font-family:'Courier New',monospace;
+  flex:1;overflow-y:auto;
+}
+#imgpop .img-caption .cap-fact p { margin-bottom:12px; }
+#imgpop .img-caption .cap-fact p b { color:#e8d080; }
+#imgpop .cap-dismiss {
+  position:relative;z-index:2;
+  font-size:11px;color:rgba(200,168,75,0.45);
+  text-align:center;margin-top:10px;
+  flex-shrink:0;font-family:'Courier New',monospace;
+  pointer-events:none;
 }
 
-/* Idle screensaver */
 #idlepop {
   position:absolute;inset:0;z-index:22;display:none;
   align-items:center;justify-content:center;cursor:pointer;
@@ -103,28 +145,70 @@ canvas{display:block;}
 #idlepop .idle-label {
   position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
   z-index:3;color:#c8a84b;font-family:'Courier New',monospace;
-  font-size:10px;letter-spacing:2px;text-align:center;
+  font-size:14px;letter-spacing:2px;text-align:center;
 }
 </style>
 </head>
 <body>
+<div id="outer">
+<div id="sidebar-left">
+  <div class="sb-title">MAP KEY</div>
+  <div class="legend-item"><div class="legend-swatch player"></div>You (Explorer)</div>
+  <div class="legend-item"><div class="legend-swatch floor"></div>Walkable path</div>
+  <div class="legend-item"><div class="legend-swatch wall"></div>Wall / blocked</div>
+  <div class="legend-item"><div class="legend-swatch exit"></div>Exit door</div>
+  <div class="legend-item"><div class="legend-swatch spike"></div>Spike trap</div>
+  <div class="legend-item"><div class="legend-swatch gas"></div>Fumigation gas</div>
+  <div class="legend-item"><div class="legend-swatch item"></div>Curiosity Point</div>
+  <div class="legend-item"><div class="legend-swatch guard"></div>Guard (CADI)</div>
+  <div class="legend-item"><div class="legend-swatch cp"></div>Checkpoint</div>
+  <div class="sb-title" style="margin-top:10px;">CONTROLS</div>
+  <div style="font-size:14px;color:#a09080;line-height:1.9;">
+    WASD / ↑↓←→ — Move<br>SHIFT — Sprint (5s)<br>C — Checkpoint<br>R — Restart<br>ESC — Pause<br>L — Leaderboard
+  </div>
+  <div class="sb-title" style="margin-top:10px;">RUN INFO</div>
+  <div id="sb-info" style="font-size:14px;color:#a09080;line-height:1.9;">
+    Level: —<br>Deaths: —<br>Curiosity: —
+  </div>
+</div>
 <div id="wrap">
   <canvas id="gc"></canvas>
   <div id="hud"></div>
 
+
+  <!-- Level intro overlay -->
+  <div id="intropop" style="position:absolute;inset:0;background:rgba(0,0,0,0.96);display:none;align-items:center;justify-content:center;z-index:15;flex-direction:column;">
+    <div id="introbox" style="border:2px solid #c8a84b;background:#09091e;padding:28px 32px;width:380px;color:#e0d8c0;font-family:'Courier New',monospace;font-size:14px;line-height:1.85;">
+      <div id="intro-lvnum" style="font-size:22px;font-weight:bold;color:#c8a84b;text-align:center;margin-bottom:4px;"></div>
+      <div id="intro-lvname" style="font-size:13px;letter-spacing:3px;color:#555;text-align:center;margin-bottom:16px;"></div>
+      <div id="intro-story" style="font-size:14px;color:#a09080;margin-bottom:14px;padding:10px;background:rgba(200,168,75,0.05);border-left:2px solid rgba(200,168,75,0.3);line-height:1.8;"></div>
+      <div style="font-size:13px;color:#666;margin-bottom:14px;border-top:1px solid #1a1a30;padding-top:10px;">
+        <b style="color:#c8a84b;">NAVIGATION</b><br>
+        WASD or ↑↓←→ &nbsp;—&nbsp; Move &nbsp;|&nbsp; SHIFT + move &nbsp;—&nbsp; Sprint (5s, 15s cooldown)<br>
+        C &nbsp;—&nbsp; Save checkpoint &nbsp;|&nbsp; R &nbsp;—&nbsp; Restart level &nbsp;|&nbsp; ESC &nbsp;—&nbsp; Pause
+      </div>
+      <div style="font-size:13px;color:#666;margin-bottom:16px;">
+        <b style="color:#22cc55;">OBJECTIVE</b><br>
+        Reach the glowing <b style="color:#22cc55">EXIT</b> door to advance. Collect all 5 <b style="color:#ffaa22">Curiosity Points</b> for bonus score.
+        Avoid the <b style="color:#cc3333">guards</b> (they'll take you to CADI) and stay ahead of the <b style="color:#22cc55">fumigation gas</b>.
+      </div>
+      <div id="intro-diff" style="font-size:13px;color:#666;margin-bottom:16px;"></div>
+      <button id="intro-btn" style="background:#22cc55;border:none;color:#000;padding:10px 0;font-size:15px;font-family:'Courier New',monospace;font-weight:bold;cursor:pointer;display:block;width:100%;">▶ BEGIN LEVEL</button>
+    </div>
+  </div>
   <!-- Main overlay (menu/pause/win/leaderboard) -->
   <div id="ov">
     <div id="ovbox">
       <h1>ASHOKA ARCHIVES</h1>
       <h2>THE MAZE · 10 LEVELS</h2>
-      <p>You are <b style="color:#c8a84b">LAZZ</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>
+      <p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>
       <span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be gassed!<br>
       <span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>
       Collect all <b style="color:#ffaa22">5 Curiosity Points</b> scattered in each level.<br>
       Every maze always has multiple routes. Spikes always have bypasses.</p>
       <button class="btn g" id="startbtn">▶ ENTER ARCHIVES — LEVEL MAZE 1</button>
       <button class="btn sm" id="lbbtn">🏆 NO-DEATH LEADERBOARD</button>
-      <div style="font-size:9px;color:#333;margin-top:4px;">WASD / ARROWS — move &nbsp;|&nbsp; R — restart level &nbsp;|&nbsp; C — checkpoint &nbsp;|&nbsp; ESC — pause</div>
+      <div style="font-size:13px;color:#333;margin-top:4px;">WASD / ARROWS — move &nbsp;|&nbsp; R — restart level &nbsp;|&nbsp; C — checkpoint &nbsp;|&nbsp; ESC — pause</div>
     </div>
   </div>
 
@@ -163,6 +247,7 @@ canvas{display:block;}
     <div class="img-caption">
       <div class="cap-title" id="imgpop-title"></div>
       <div class="cap-fact"  id="imgpop-fact"></div>
+      <div class="cap-dismiss">CLICK OR PRESS ANY KEY TO CONTINUE · AUTO-CLOSES IN 10s</div>
     </div>
   </div>
 
@@ -172,6 +257,21 @@ canvas{display:block;}
     <img src="assets/IDEAL_SCREEN_POP_UP.jpeg" alt="Ashoka Archives">
     <div class="idle-label">PRESS ANY KEY OR CLICK TO CONTINUE</div>
   </div>
+</div>
+<div id="sidebar-right">
+  <div class="sb-title">MINIMAP</div>
+  <canvas id="minimap-canvas" width="136" height="100"></canvas>
+  <div style="font-size:14px;color:#666;text-align:center;margin-top:5px;font-size:11px;font-family:'Courier New',monospace;"><span style="color:#c8a84b;">● You</span>&nbsp; <span style="color:#ff4444;">● Guard</span>&nbsp; <span style="color:#ffaa22;">● Item</span></div>
+  <div class="sb-title" style="margin-top:8px;">STAMINA</div>
+  <div id="stamina-wrap">
+    <div style="font-size:14px;color:#88aadd;margin-bottom:4px;text-align:center;">HOLD SHIFT to sprint</div>
+    <div id="stamina-bar-bg"><div id="stamina-bar-fill"></div></div>
+    <div id="stamina-status">READY</div>
+    <div id="stamina-sprint">⚡ SPRINTING</div>
+  </div>
+  <div class="sb-title" style="margin-top:8px;">LEVEL</div>
+  <div id="sb-level" style="font-size:14px;color:#a09080;line-height:1.9;text-align:center;">—</div>
+</div>
 </div>
 
 <script>
@@ -197,16 +297,26 @@ gc.width = CW; gc.height = CH;
 // ARCHIVE KNOWLEDGE (5 items — all 5 available every level)
 // ═══════════════════════════════════════════════════════════
 const KNOWLEDGE = [
-  {ch:'F', col:'#22cc55', nm:'FUMIGATION',
-   fact:'The Archives fumigates collections with thymol crystals in a sealed chamber, eliminating insects and mold spores that destroy paper over decades.'},
-  {ch:'L', col:'#5599ff', nm:'LAMINATION',
-   fact:'Fragile documents are encased in acid-free polyester (Mylar) film to halt deterioration while keeping originals legible to future researchers.'},
-  {ch:'S', col:'#ffaa22', nm:'SCANNING',
-   fact:'Overhead planetary scanners capture at 400+ DPI, creating permanent digital surrogates stored in Ashoka\'s institutional repository forever.'},
-  {ch:'D', col:'#ff66aa', nm:'DISPLAY',
-   fact:'UV-filtered exhibition cases with controlled humidity (45-55% RH) protect documents during public display at Ashoka University events.'},
-  {ch:'X', col:'#aa66ff', nm:'STORAGE',
-   fact:'Acid-free clamshell boxes, polyester sleeves and climate-controlled vaults at 18-20°C form the long-term preservation backbone of the Archives.'},
+  {ch:'☁', col:'#22cc55', nm:'FUMIGATION',
+   fact:`<p><b>What is Archive Fumigation?</b> The Ashoka Archives of Contemporary India uses chemical fumigation to protect its collections from biological threats. Entire batches of documents are sealed inside an airtight chamber along with thymol crystals or paradichloro-benzene (PDB). These substances vaporise slowly, penetrating every fibre of the paper and killing insects such as silverfish and book lice, as well as neutralising mold and fungal spores that invisibly degrade cellulose over decades.</p>
+<p><b>The Process.</b> Documents are typically sealed for 72 to 96 hours at controlled temperature and humidity. The chamber must be airtight to prevent toxic fumes from escaping. After fumigation, materials are aired in a separate ventilated room for at least 24 hours before conservators handle them with gloves and masks. This step is non-negotiable — thymol fumes are harmful to humans in concentrated form, which is why the green gas in this maze is so dangerous to Lazz.</p>
+<p><b>Why it matters.</b> A single silverfish can consume the ink from an irreplaceable photograph within weeks. Mold colonies spread silently in warm, humid conditions and can render an entire box of documents unreadable in a single monsoon season. Fumigation is the first line of defence — performed on every incoming collection before cataloguing, scanning or storage can begin. Without it, the Archives could lose decades of India's political and cultural memory.</p>`},
+  {ch:'🧴', col:'#5599ff', nm:'LAMINATION',
+   fact:`<p><b>What is Conservation Lamination?</b> Lamination at the Ashoka Archives involves encasing fragile or torn documents in layers of acid-free polyester film — commonly known by the brand names Mylar or Melinex. Unlike the destructive heat-lamination used in offices (which permanently fuses plastic to paper), archival lamination is entirely reversible. Conservators use cold-press techniques and solvent-removable adhesives, ensuring that originals can always be recovered if better preservation methods emerge in future.</p>
+<p><b>How it works.</b> A trained conservator first flattens the document under weights, repairs visible tears with Japanese tissue and wheat-starch paste, and allows it to fully dry. The document is then sandwiched between two sheets of polyester film cut precisely to size. A cold laminating press applies even, calibrated pressure — no heat — bonding the layers without introducing any new chemical stress to the paper. Each laminated item is labelled, photographed, and logged before being returned to its acid-free enclosure.</p>
+<p><b>The scale of the work.</b> The Archives processes between 30 and 50 items per day through its lamination station. Given that a single collection can contain thousands of loose sheets, correspondence bundles, and photographs in varying states of decay, the lamination team represents one of the most labour-intensive operations in the entire archive. Documents that have already become brittle or brown at the edges — a process called acid migration — are given priority, as lamination can slow but not reverse the chemical breakdown already underway.</p>`},
+  {ch:'🔍', col:'#ffaa22', nm:'SCANNING',
+   fact:`<p><b>The Digitisation Mission.</b> The Ashoka Archives uses a Zeutschel OS 12000 planetary overhead scanner — one of the most advanced document digitisation systems available — to create permanent digital surrogates of its physical holdings. The scanner captures images at 400 to 600 DPI in full 24-bit colour, producing TIFF master files that are lossless and archival-grade. A lower-resolution JPEG access copy is generated simultaneously for online viewing and researcher requests.</p>
+<p><b>Why a planetary scanner?</b> Unlike flatbed scanners that require documents to be pressed face-down against glass, the OS 12000's overhead arm captures images from above. This means fragile bound volumes, crumbling pamphlets, and oversized maps can be scanned without being flattened, opened beyond their natural spine angle, or exposed to pressure that could cause further damage. The scanning surface is illuminated by LED arrays calibrated to eliminate glare and colour cast.</p>
+<p><b>Metadata and access.</b> Every scan is embedded with structured metadata: collection name, creator, accession number, date range, physical dimensions, condition notes, and the name of the digitisation technician. These files are ingested into the Ashoka University digital repository, where they will eventually be discoverable through an online finding aid. The team digitises approximately 800 to 1,200 pages per day. At that rate, scanning the entire archive — tens of thousands of items — is a multi-year undertaking that forms the backbone of the Archives' long-term access strategy.</p>`},
+  {ch:'🖼', col:'#ff66aa', nm:'DISPLAY',
+   fact:`<p><b>Archives on Show.</b> The Ashoka Archives of Contemporary India does not only preserve documents — it actively shares them. Exhibition display is a core part of the Archives' public mission, bringing the private papers of significant Indian intellectuals, politicians, journalists, and public figures into the shared cultural space of the university. Exhibitions have featured the papers of figures including L.M. Singhvi, Kuldip Nayar, Achin Vanaik, and Barbara Harriss-White, giving students and faculty direct visual contact with primary sources from modern Indian history.</p>
+<p><b>The science of safe display.</b> Displaying archival documents is a delicate balancing act between access and preservation. The Archives uses museum-grade exhibition cases fitted with UV-filtering acrylic panels that block 99% of ultraviolet radiation — the primary cause of fading and acid yellowing in paper. Internal humidity is maintained between 45 and 55% relative humidity, and temperature is kept stable at 18 to 20°C. Documents are never placed under direct spotlights, as even LED heat can accelerate degradation over time.</p>
+<p><b>Access rules.</b> For in-person research access, the Archives operates a reading room where scholars can view original documents by appointment. Cotton gloves are mandatory. Pencils only — no pens. Photographs may be taken without flash. Each item is tracked in and out via an accession log. The combination of public exhibition and controlled reading room access represents the Archives' dual commitment: to make India's recent history visible while ensuring it survives long enough for future generations to encounter it in its original physical form.</p>`},
+  {ch:'📦', col:'#aa66ff', nm:'STORAGE',
+   fact:`<p><b>The Vault System.</b> Long-term storage at the Ashoka Archives follows international preservation standards developed by organisations including the International Council on Archives (ICA) and the Society of American Archivists (SAA). All documents are housed in acid-free clamshell boxes or polyester sleeves, arranged on powder-coated steel shelving that does not off-gas volatile compounds harmful to paper. The primary vault maintains a stable environment of 18 to 20°C and 45 to 55% relative humidity, monitored continuously by a Bry-Air industrial dehumidification system.</p>
+<p><b>Organisation and labelling.</b> The repository is organised by accession number, running from C-212 through C-264 and beyond, with each box carrying a label identifying the collection creator, date range, box number, and contents summary. The Archives currently holds the papers of over 35 significant Indian public figures — politicians, scientists, writers, and social activists — along with organisational records, photographic collections, and audiovisual materials. Climate logs are reviewed weekly and any environmental excursion beyond set parameters is flagged for immediate remediation.</p>
+<p><b>Why physical storage still matters.</b> In the age of digitisation, it might seem that physical storage is becoming obsolete. The Archives takes the opposite view. Digital files require ongoing migration to new formats and storage media every 10 to 15 years — a process that itself carries risk of loss. The original physical document, stored correctly, can survive for centuries. Acid-free paper, kept in stable conditions away from light, humidity fluctuation and pests, will outlast any digital format yet invented. The vault is not a backup — it is the primary record.</p>`},
 ];
 
 const ZONE_NAMES = [
@@ -456,7 +566,8 @@ function bfsPath(sr, sc, er, ec, avoidSpikes) {
 // ═══════════════════════════════════════════════════════════
 // GAME STATE
 // ═══════════════════════════════════════════════════════════
-let sc = 'menu'; // menu | playing | dead | lvtransition | won | paused
+let sc = 'menu';
+let playerName = 'EXPLORER'; // set at name entry screen // menu | playing | dead | lvtransition | won | paused
 let lv = 1;
 let deaths = 0, noDeath = true;
 let runStartMs = 0, lvTimer = 0, tInt = null;
@@ -478,7 +589,7 @@ function loadLB() { try{ return JSON.parse(localStorage.getItem(LB_KEY))||[]; }c
 function saveLB(e) { try{ localStorage.setItem(LB_KEY, JSON.stringify(e)); }catch(x){} }
 function recordRun(ms, cur) {
   let e = loadLB();
-  e.push({timeMs:ms, dateISO:new Date().toISOString(), curiosity:cur, playerName:'LAZZ'});
+  e.push({timeMs:ms, dateISO:new Date().toISOString(), curiosity:cur, playerName:playerName||'EXPLORER'});
   e.sort((a,b)=>a.timeMs!==b.timeMs?a.timeMs-b.timeMs:b.curiosity-a.curiosity);
   e = e.slice(0,10); saveLB(e); return e;
 }
@@ -559,6 +670,8 @@ function spawnEntities() {
 const keys = {};
 wrap.setAttribute('tabindex','0');
 wrap.addEventListener('keydown', e => {
+  // Don't intercept if user is typing in an input field
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   keys[e.key] = true;
   if (sc === 'playing') {
     if (e.key==='r'||e.key==='R') { restartLv(); return; }
@@ -582,9 +695,15 @@ function upPlayer(dt) {
   if (keys['ArrowUp']   ||keys['w']||keys['W']) dy=-1;
   if (keys['ArrowDown'] ||keys['s']||keys['S']) dy= 1;
   if (dx&&dy) { dx*=0.707; dy*=0.707; }
-  const nx=px+dx*SPD*dt, ny=py+dy*SPD*dt;
-  if (!wHit(nx, py)) px=nx;
-  if (!wHit(px, ny)) py=ny;
+  const curSpd = SPD * (staminaActive ? SPRINT_MULT : 1.0);
+  // Sub-step collision: split large moves into small steps to prevent wall phasing
+  const steps = staminaActive ? 6 : 2;
+  const stepX = dx * curSpd * dt / steps;
+  const stepY = dy * curSpd * dt / steps;
+  for (let _s = 0; _s < steps; _s++) {
+    if (!wHit(px + stepX, py)) px += stepX;
+    if (!wHit(px, py + stepY)) py += stepY;
+  }
   pmov = (dx!==0||dy!==0);
   if (dx!==0) pdir=dx>0?1:-1;
   if (pmov) panim=(panim+dt*7)%4;
@@ -602,7 +721,7 @@ function upPlayer(dt) {
 }
 
 function wHit(x, y) {
-  const m = 0.28;
+  const m = 0.24;
   for (const [cx,cy] of [[x-m,y-m],[x+m,y-m],[x-m,y+m],[x+m,y+m]]) {
     const r=Math.floor(cy), c=Math.floor(cx);
     if (r<0||r>=ROWS||c<0||c>=COLS||map[r][c]===1) return true;
@@ -766,14 +885,14 @@ function triggerWin() {
     const totalMs = Date.now() - runStartMs;
     const entries = noDeath ? recordRun(totalMs, curioCollected) : loadLB();
     const ndMsg = noDeath
-      ? `<div style="color:#22cc55;margin:8px 0;font-size:12px;">🏆 NO-DEATH RUN COMPLETE!<br>Time: <b>${fmtMs(totalMs)}</b></div>`
+      ? `<div style="color:#22cc55;margin:8px 0;font-size:15px;">🏆 NO-DEATH RUN COMPLETE!<br>Time: <b>${fmtMs(totalMs)}</b></div>`
       : `<div style="color:#cc3333;margin:8px 0;">Run completed with ${deaths} death${deaths>1?'s':''} — no-death not eligible</div>`;
     let lbHtml='';
     if (entries.length) {
-      lbHtml=`<div style="margin:10px 0 4px;color:#c8a84b;font-size:10px;font-weight:bold;">TOP NO-DEATH TIMES</div>`;
+      lbHtml=`<div style="margin:10px 0 4px;color:#c8a84b;font-size:14px;font-weight:bold;">TOP NO-DEATH TIMES</div>`;
       for(let i=0;i<Math.min(entries.length,5);i++){
         const e=entries[i];
-        lbHtml+=`<div style="font-size:9px;padding:2px 0;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
+        lbHtml+=`<div style="font-size:13px;padding:2px 0;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
           `${i+1}. ${e.playerName} — ${fmtMs(e.timeMs)} · ★${e.curiosity}</div>`;
       }
     }
@@ -781,7 +900,7 @@ function triggerWin() {
       `<h1 style="color:#22cc55">ARCHIVES COMPLETE!</h1>`+
       `<div class="sub">ALL 10 LEVEL MAZES CLEARED</div>`+
       ndMsg+
-      `<div style="margin:6px 0 14px;font-size:11px;">★ Curiosity: <b>${curioCollected}/50</b> &nbsp;|&nbsp; Time: <b>${fmtMs(totalMs)}</b></div>`+
+      `<div style="margin:6px 0 14px;font-size:14px;">★ Curiosity: <b>${curioCollected}/50</b> &nbsp;|&nbsp; Time: <b>${fmtMs(totalMs)}</b></div>`+
       lbHtml+`<br>`+
       `<button class="btn g" onclick="startGame()">▶ NEW RUN</button>`+
       `<button class="btn sm" onclick="showLBScreen()">🏆 LEADERBOARD</button>`
@@ -802,7 +921,7 @@ function triggerWin() {
     `Level time: <b>${lvTimer}s</b> &nbsp;|&nbsp; Bonus: <b>+${lvScore}</b><br>`+
     `Total curiosity: <b style="color:#ffaa22">★ ${curioCollected}</b><br><br>`+
     `<span style="color:#c8a84b">— NEXT: LEVEL MAZE ${lv+1} — ${ZONE_NAMES[lv]} —</span><br>`+
-    `<span style="font-size:9px;color:#555;">`+
+    `<span style="font-size:13px;color:#555;">`+
     `Guards: ${nextDiff.gc} &nbsp;|&nbsp; Guard speed: ×${nextDiff.gcs.toFixed(2)} &nbsp;|&nbsp; Gas spread: ${nextDiff.gi.toFixed(2)}s/tile</span>`;
 
   document.getElementById('lvnext').textContent = `▶ ENTER LEVEL MAZE ${lv+1}`;
@@ -810,8 +929,13 @@ function triggerWin() {
     lvpop.style.display = 'none';
     lv++;
     lvTimer=0; lvCurioCollected=0; cp=null;
-    buildLevel(); spawnEntities(); sc='playing'; startTimer();
-    notify(`LEVEL MAZE ${lv} — ${ZONE_NAMES[lv-1]}`, 2500);
+    buildLevel(); spawnEntities();
+    sc='paused';
+    showLevelIntro(() => {
+      sc='playing';
+      startTimer();
+      notify(`LEVEL MAZE ${lv} — ${ZONE_NAMES[lv-1]}`, 2000);
+    });
   };
   lvpop.style.display = 'flex';
 }
@@ -828,18 +952,8 @@ function saveCP() {
 function startTimer() { clearInterval(tInt); tInt=setInterval(()=>lvTimer++,1000); }
 
 function showKP(k) {
-  // Show image popup for 2s (freeze + audio), THEN show text card
+  // Image popup IS the knowledge card — no separate text card needed
   showImagePopup(k);
-  // Schedule the text card to appear after image popup closes
-  setTimeout(() => {
-    kpause=true;
-    document.getElementById('kpt').textContent=`[${k.ch}] ${k.nm} — Curiosity Point!`;
-    document.getElementById('kpt').style.color=k.col;
-    document.getElementById('kpb').textContent=k.fact;
-    document.getElementById('kp').style.borderColor=k.col;
-    document.getElementById('kp').style.display='block';
-    clearTimeout(kpT); kpT=setTimeout(closeKP,5000);
-  }, 2100); // after image popup closes
 }
 function closeKP() { kpause=false; document.getElementById('kp').style.display='none'; }
 
@@ -854,7 +968,7 @@ function pauseGame() {
   showMainOv(
     `<h1>PAUSED</h1>`+
     `<div class="sub">LEVEL MAZE ${lv} — ${ZONE_NAMES[lv-1]}</div>`+
-    `<div style="font-size:11px;margin-bottom:14px;">Time: ${lvTimer}s &nbsp;|&nbsp; ★ ${curioCollected} curiosity &nbsp;|&nbsp; Deaths: ${deaths}</div>`+
+    `<div style="font-size:14px;margin-bottom:14px;">Time: ${lvTimer}s &nbsp;|&nbsp; ★ ${curioCollected} curiosity &nbsp;|&nbsp; Deaths: ${deaths}</div>`+
     `<button class="btn g" onclick="resumeGame()">▶ RESUME</button>`+
     `<button class="btn sm" onclick="restartLv()">↺ RESTART LEVEL MAZE ${lv}</button>`+
     `<button class="btn sm" onclick="showLBScreen()">🏆 LEADERBOARD</button>`+
@@ -872,7 +986,7 @@ function showLBScreen() {
   } else {
     for(let i=0;i<entries.length;i++){
       const e=entries[i], d=new Date(e.dateISO);
-      html+=`<div style="font-size:10px;padding:4px 0;border-bottom:1px solid #111;text-align:left;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
+      html+=`<div style="font-size:14px;padding:4px 0;border-bottom:1px solid #111;text-align:left;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
         `${i+1}. ${e.playerName} — ${fmtMs(e.timeMs)} &nbsp;|&nbsp; ★${e.curiosity} &nbsp;|&nbsp; ${d.getMonth()+1}/${d.getDate()}</div>`;
     }
   }
@@ -893,14 +1007,14 @@ function notify(msg, dur=2000) {
 
 function mainMenuHTML() {
   return `<h1>ASHOKA ARCHIVES</h1><h2>THE MAZE · 10 LEVELS</h2>`+
-    `<p>You are <b style="color:#c8a84b">LAZZ</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>`+
+    `<p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>`+
     `<span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be sent to the Infirmary!<br>`+
     `<span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>`+
     `All 5 Curiosity Points are always available each level.<br>`+
     `Multiple routes always exist. Spikes always have bypasses.</p>`+
     `<button class="btn g" onclick="startGame()">▶ ENTER ARCHIVES — LEVEL MAZE 1</button>`+
     `<button class="btn sm" onclick="showLBScreen()">🏆 NO-DEATH LEADERBOARD</button>`+
-    `<div style="font-size:9px;color:#333;margin-top:4px;">WASD/ARROWS · R=Restart · C=Checkpoint · ESC=Pause</div>`;
+    `<div style="font-size:13px;color:#333;margin-top:4px;">WASD/ARROWS · R=Restart · C=Checkpoint · ESC=Pause</div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -922,7 +1036,7 @@ function updateCamera() {
 
 function drawGame() {
   ctx.clearRect(0,0,CW,CH);
-  ctx.fillStyle='#05050e'; ctx.fillRect(0,OY,CW,CH-OY);
+  ctx.fillStyle='#a0a09a'; ctx.fillRect(0,OY,CW,CH-OY);
   updateCamera();
 
   ctx.save();
@@ -941,27 +1055,46 @@ function drawGame() {
   for (let r=r0;r<r1;r++) for (let c=c0;c<c1;c++) {
     const tx=c*TILE, ty=r*TILE, tl=map[r]?.[c];
     if (tl===1) {
-      ctx.fillStyle='#121224'; ctx.fillRect(tx,ty,TILE,TILE);
-      ctx.fillStyle='rgba(200,168,75,0.07)';
-      ctx.fillRect(tx,ty,TILE,2);
-      ctx.fillRect(tx,ty,2,TILE);
+      // Rich stone wall with 3D bevel effect
+      ctx.fillStyle='#080808'; ctx.fillRect(tx,ty,TILE,TILE);
+      // Wall face texture — subtle crosshatch
+      ctx.fillStyle='#111111'; ctx.fillRect(tx+2,ty+2,TILE-4,TILE-4);
+      // Top-left highlight (light source from top-left)
+      ctx.fillStyle='rgba(200,168,75,0.25)';
+      ctx.fillRect(tx,ty,TILE,3);
+      ctx.fillRect(tx,ty,3,TILE);
+      // Bottom-right shadow
+      ctx.fillStyle='rgba(0,0,0,0.4)';
+      ctx.fillRect(tx,TILE+ty-3,TILE,3);
+      ctx.fillRect(TILE+tx-3,ty,3,TILE);
+      // Corner accent dot
+      if((r+c)%5===0){ ctx.fillStyle='rgba(200,168,75,0.08)'; ctx.fillRect(tx+TILE/2-2,ty+TILE/2-2,4,4); }
     } else if (tl===0) {
-      ctx.fillStyle=(r+c)%2===0?'#0a0a18':'#0d0d1e'; ctx.fillRect(tx,ty,TILE,TILE);
+      // Crisp floor — warm stone with visible tile grid
+      const fc = (r+c)%2===0 ? '#b8b4ae' : '#aeaaa4';
+      ctx.fillStyle = fc; ctx.fillRect(tx,ty,TILE,TILE);
+      // Subtle grout lines
+      ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=0.5;
+      ctx.strokeRect(tx+0.5,ty+0.5,TILE-1,TILE-1);
+      // Floor sheen highlight (top-left corner)
+      ctx.fillStyle='rgba(255,255,255,0.25)';
+      ctx.fillRect(tx,ty,TILE*0.3,TILE*0.3);
     } else if (tl===2) {
-      ctx.fillStyle='#051005'; ctx.fillRect(tx,ty,TILE,TILE);
+      // EXIT — green glowing door
+      const pulse2 = 0.3+0.2*Math.sin(Date.now()*0.006);
+      ctx.fillStyle='#051405'; ctx.fillRect(tx,ty,TILE,TILE);
+      ctx.fillStyle=`rgba(34,204,85,${pulse2*0.5})`; ctx.fillRect(tx,ty,TILE,TILE);
       ctx.strokeStyle='#22cc55'; ctx.lineWidth=2;
       ctx.strokeRect(tx+2,ty+2,TILE-4,TILE-4);
+      // Door frame
+      ctx.strokeStyle='#44ee88'; ctx.lineWidth=1;
+      ctx.strokeRect(tx+4,ty+4,TILE-8,TILE-8);
       ctx.fillStyle='#22cc55';
-      ctx.font=`bold ${TILE-4}px monospace`;
+      ctx.font=`bold ${TILE-5}px monospace`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('E', tx+TILE/2, ty+TILE/2);
-      // Pulsing glow
-      const pulse = 0.3+0.2*Math.sin(Date.now()*0.006);
-      ctx.fillStyle=`rgba(34,204,85,${pulse})`;
-      ctx.fillRect(tx+2,ty+2,TILE-4,TILE-4);
-      ctx.fillStyle='#22cc55';
-      ctx.font=`bold ${TILE-4}px monospace`;
-      ctx.fillText('E', tx+TILE/2, ty+TILE/2);
+      ctx.shadowColor='#22cc55'; ctx.shadowBlur=8;
+      ctx.fillText('EXIT', tx+TILE/2, ty+TILE/2);
+      ctx.shadowBlur=0;
     } else if (tl===3) {
       ctx.fillStyle='#160404'; ctx.fillRect(tx,ty,TILE,TILE);
       drawSpike(tx+TILE/2, ty+TILE/2, TILE*0.3);
@@ -1017,11 +1150,11 @@ function drawGame() {
 
   ctx.restore();
 
-  // Minimap overlay
-  drawMinimap();
+  // Minimap drawn to sidebar canvas separately
 
   // HUD
   drawHUD();
+  drawMinimap();
 }
 
 function drawSpike(x,y,r) {
@@ -1036,20 +1169,137 @@ function drawSpike(x,y,r) {
 }
 
 function drawPlayer() {
-  const wx=px*TILE, wy=py*TILE, bob=pmov?Math.sin(panim*Math.PI)*2:0;
+  const wx=px*TILE, wy=py*TILE;
+  const bob=pmov?Math.sin(panim*Math.PI)*2.5:0;
+  const sprintGlow = staminaActive;
   ctx.save(); ctx.translate(wx, wy+bob);
-  ctx.fillStyle='rgba(0,0,0,0.22)';
-  ctx.beginPath(); ctx.ellipse(0,7,8,4,0,0,Math.PI*2); ctx.fill();
+
+  // ── Ground shadow ──
+  ctx.fillStyle='rgba(0,0,0,0.38)';
+  ctx.beginPath(); ctx.ellipse(0,9,10,4,0,0,Math.PI*2); ctx.fill();
+
+  // ── Sprint aura ──
+  if(sprintGlow){
+    ctx.strokeStyle='rgba(100,200,255,0.4)';
+    ctx.lineWidth=3;
+    ctx.beginPath(); ctx.ellipse(0,-6,13,18,0,0,Math.PI*2); ctx.stroke();
+  }
+
   ctx.scale(pdir,1);
-  ctx.fillStyle='#b89038'; ctx.fillRect(-7,-9,14,12);
-  ctx.fillStyle='#e8c880'; ctx.beginPath(); ctx.arc(0,-14,6,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#333';    ctx.beginPath(); ctx.arc(3,-15,1.2,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#7a5018'; ctx.fillRect(5,-8,5,9);
-  ctx.fillStyle='#05050e'; ctx.font='bold 7px monospace';
-  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('L',0,-3);
+
+  // ── Legs (animated walk) ──
+  const legSwing = pmov?Math.sin(panim*Math.PI*2)*4:0;
+  ctx.fillStyle='#2a3050';
+  // Left leg
+  ctx.save(); ctx.translate(-3,3);
+  ctx.fillRect(-3,-legSwing, 5, 10+legSwing);
+  // shoe
+  ctx.fillStyle='#e8e0d0'; ctx.fillRect(-4,10-legSwing,7,3);
   ctx.restore();
-  ctx.font='6px monospace'; ctx.fillStyle='#c8a84b'; ctx.textAlign='center';
-  ctx.fillText('LAZZ', wx, py*TILE-22);
+  // Right leg
+  ctx.fillStyle='#2a3050';
+  ctx.save(); ctx.translate(3,3);
+  ctx.fillRect(-2,legSwing, 5, 10-legSwing);
+  // shoe
+  ctx.fillStyle='#e8e0d0'; ctx.fillRect(-3,10+legSwing,7,3);
+  ctx.restore();
+
+  // ── Backpack ──
+  const packGrad = ctx.createLinearGradient(5,-9,12,-3);
+  packGrad.addColorStop(0,'#8B6914');
+  packGrad.addColorStop(1,'#5a4008');
+  ctx.fillStyle=packGrad;
+  ctx.beginPath();
+  ctx.roundRect(5,-10,8,13,2);
+  ctx.fill();
+  // Pack strap highlight
+  ctx.strokeStyle='rgba(255,200,80,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(5,-10); ctx.lineTo(5,3); ctx.stroke();
+  // Pack clip
+  ctx.fillStyle='#ffcc44'; ctx.fillRect(6,-5,6,3);
+
+  // ── Body / Jacket ──
+  const bodyGrad = ctx.createLinearGradient(-8,-10,6,4);
+  bodyGrad.addColorStop(0,'#d4a832');
+  bodyGrad.addColorStop(0.5,'#b8922a');
+  bodyGrad.addColorStop(1,'#8a6c1a');
+  ctx.fillStyle=bodyGrad;
+  ctx.beginPath(); ctx.roundRect(-8,-10,13,14,3); ctx.fill();
+  // Jacket highlight (left shoulder catch)
+  ctx.fillStyle='rgba(255,240,150,0.18)';
+  ctx.beginPath(); ctx.roundRect(-7,-9,5,5,2); ctx.fill();
+  // Collar
+  ctx.fillStyle='#ffffff22';
+  ctx.beginPath(); ctx.moveTo(-2,-10); ctx.lineTo(2,-10); ctx.lineTo(1,-7); ctx.lineTo(-1,-7); ctx.closePath(); ctx.fill();
+  // University logo on chest
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.beginPath(); ctx.arc(-2,-3,3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffcc44'; ctx.font='bold 4px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('A',-2,-3);
+
+  // ── Neck ──
+  ctx.fillStyle='#c8956a';
+  ctx.fillRect(-2,-12,4,4);
+
+  // ── Head ──
+  const headGrad = ctx.createRadialGradient(-1,-17,1,0,-16,7);
+  headGrad.addColorStop(0,'#f0c888');
+  headGrad.addColorStop(1,'#d4a060');
+  ctx.fillStyle=headGrad;
+  ctx.beginPath(); ctx.arc(0,-17,7,0,Math.PI*2); ctx.fill();
+  // Jaw shadow
+  ctx.fillStyle='rgba(0,0,0,0.1)';
+  ctx.beginPath(); ctx.arc(0,-15,5,0,Math.PI); ctx.fill();
+
+  // ── Glasses ──
+  ctx.strokeStyle='#888'; ctx.lineWidth=0.8;
+  ctx.strokeRect(-5,-18,4,3);
+  ctx.strokeRect(1,-18,4,3);
+  ctx.beginPath(); ctx.moveTo(-1,-17); ctx.lineTo(1,-17); ctx.stroke();
+  ctx.fillStyle='rgba(150,200,255,0.2)';
+  ctx.fillRect(-5,-18,4,3); ctx.fillRect(1,-18,4,3);
+
+  // ── Eyes ──
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath(); ctx.arc(-2.5,-17,1,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(3,-17,1,0,Math.PI*2); ctx.fill();
+  // Eye shine
+  ctx.fillStyle='#ffffff';
+  ctx.beginPath(); ctx.arc(-2,-17.4,0.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(3.5,-17.4,0.4,0,Math.PI*2); ctx.fill();
+
+  // ── Hair (messy student) ──
+  ctx.fillStyle='#1a0a00';
+  ctx.beginPath(); ctx.arc(0,-23,5,Math.PI,0); ctx.fill();
+  ctx.beginPath(); ctx.arc(-4,-21,3,Math.PI*1.2,Math.PI*1.8); ctx.fill();
+  // Hair highlight
+  ctx.strokeStyle='rgba(80,40,10,0.6)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(-1,-23,3,Math.PI*1.1,Math.PI*1.7); ctx.stroke();
+
+  // ── Arms ──
+  const armSwing = pmov?Math.sin(panim*Math.PI*2)*5:0;
+  ctx.fillStyle='#d4a060';
+  // Right arm (foreground)
+  ctx.save(); ctx.translate(5,-5);
+  ctx.rotate((armSwing)*0.04);
+  ctx.fillRect(0,0,4,9); ctx.restore();
+  // Left arm (back — darker)
+  ctx.fillStyle='#b08040';
+  ctx.save(); ctx.translate(-8,-5);
+  ctx.rotate((-armSwing)*0.04);
+  ctx.fillRect(0,0,4,9); ctx.restore();
+
+  ctx.restore();
+
+  // ── Name tag above character ──
+  ctx.font='bold 9px "Courier New", monospace';
+  ctx.textAlign='center';
+  // Text shadow
+  ctx.fillStyle='rgba(0,0,0,0.8)';
+  ctx.fillText(playerName||'EXPLORER', wx+1, py*TILE-27);
+  ctx.fillStyle='#c8a84b';
+  ctx.fillText(playerName||'EXPLORER', wx, py*TILE-28);
 }
 
 function drawGuard(g) {
@@ -1076,21 +1326,42 @@ function drawGuard(g) {
 }
 
 function drawMinimap() {
-  const mm=3, mmW=COLS*mm, mmH=ROWS*mm;
-  const mx=CW-mmW-3, my=1;
-  ctx.fillStyle='rgba(0,0,0,0.75)';
-  ctx.fillRect(mx-1,my-1,mmW+2,mmH+2);
+  const mc = document.getElementById('minimap-canvas');
+  if (!mc || !map.length) return;
+  const mctx = mc.getContext('2d');
+  const mmW = mc.width, mmH = mc.height;
+  const scx = mmW / COLS, scy = mmH / ROWS;
+  mctx.fillStyle='#060610'; mctx.fillRect(0,0,mmW,mmH);
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
     const tl=map[r]?.[c];
     if(tl===1) continue;
-    let col2=tl===2?'#22cc55':tl===3?'#cc2222':gasGrid[r]?.[c]?'rgba(28,200,75,0.7)':'#1a1a30';
-    ctx.fillStyle=col2;
-    ctx.fillRect(mx+c*mm, my+r*mm, mm, mm);
+    let col2=tl===2?'#22cc55':tl===3?'#993333':gasGrid[r]?.[c]?'rgba(28,200,75,0.75)':'#1c1832';
+    mctx.fillStyle=col2;
+    mctx.fillRect(c*scx, r*scy, scx, scy);
   }
-  for(const g of guards){ ctx.fillStyle='#ff4444'; ctx.fillRect(mx+Math.floor(g.x)*mm, my+Math.floor(g.y)*mm, mm+1,mm+1); }
-  for(const k of items){ if(!k.got){ ctx.fillStyle=k.col; ctx.fillRect(mx+k.c*mm,my+k.r*mm,mm+1,mm+1); } }
-  ctx.fillStyle='#c8a84b';
-  ctx.fillRect(mx+Math.floor(px)*mm, my+Math.floor(py)*mm, mm+1,mm+1);
+  // Items
+  for(const k of items){ if(!k.got){ mctx.fillStyle=k.col; mctx.fillRect(k.c*scx-1,k.r*scy-1,scx+2,scy+2); } }
+  // Guards
+  for(const g of guards){
+    mctx.fillStyle=g.state==='chase'?'#ff2222':'#ff6666';
+    mctx.fillRect(Math.floor(g.x)*scx,Math.floor(g.y)*scy,scx+1,scy+1);
+  }
+  // Checkpoint
+  if(cp){ mctx.fillStyle='#4488ff'; mctx.fillRect(Math.floor(cp.x)*scx,Math.floor(cp.y)*scy,scx+1,scy+1); }
+  // Player
+  mctx.fillStyle='#c8a84b';
+  mctx.fillRect(Math.floor(px)*scx-1,Math.floor(py)*scy-1,scx+2,scy+2);
+  // Viewport indicator
+  const vpR0=camY/TILE, vpC0=camX/TILE;
+  const vpRH=(CH-OY)/TILE, vpCW=CW/TILE;
+  mctx.strokeStyle='rgba(200,168,75,0.4)'; mctx.lineWidth=1;
+  mctx.strokeRect(vpC0*scx, vpR0*scy, vpCW*scx, vpRH*scy);
+
+  // Update sidebar run info
+  const sbi = document.getElementById('sb-info');
+  if(sbi) sbi.innerHTML=`Level: ${lv}/10<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/5<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
+  const sbl = document.getElementById('sb-level');
+  if(sbl) sbl.innerHTML=`<b style="color:#c8a84b">${ZONE_NAMES[lv-1]||''}</b><br><span style="font-size:15px;color:#555">${lv<10?'Next: '+ZONE_NAMES[lv]:''}</span>`;
 }
 
 function drawHUD() {
@@ -1114,7 +1385,7 @@ function drawHUD() {
 let lastTs=0, raf=null;
 function loop(ts) {
   const dt=Math.min((ts-lastTs)/1000, 0.05); lastTs=ts;
-  if (sc==='playing'&&!kpause) { upPlayer(dt); upGuards(dt); updateGas(dt); }
+  if (sc==='playing'&&!kpause) { upPlayer(dt); upGuards(dt); updateGas(dt); updateStamina(dt); }
   if (sc==='playing') drawGame();
   raf=requestAnimationFrame(loop);
 }
@@ -1210,7 +1481,7 @@ wrap.addEventListener('click',   ensureBGM, {once:true});
 // IMAGE POPUP SYSTEM
 // ═══════════════════════════════════════════════════════════
 const ITEM_IMAGES = {
-  'F': 'assets/FUMIGATION.jpeg',   // Fumigation placeholder
+  'F': 'assets/fumigation.jpeg',   // Fumigation placeholder
   'L': 'assets/LAMINATION2.jpeg',
   'S': 'assets/SCANNING.jpeg',
   'D': 'assets/DISPLAY.jpeg',
@@ -1221,31 +1492,52 @@ let imgPopActive = false;
 let imgPopT = null;
 
 function showImagePopup(item) {
-  const imgSrc = ITEM_IMAGES[item.ch];
+  // Map by nm since ch is now emoji
+  const IMG_BY_NM = {
+    'FUMIGATION':  'assets/SCANNING2.jpeg',
+    'LAMINATION':  'assets/LAMINATION2.jpeg',
+    'SCANNING':    'assets/SCANNING.jpeg',
+    'DISPLAY':     'assets/DISPLAY.jpeg',
+    'STORAGE':     'assets/STORAGE11.jpeg',
+  };
+  const imgSrc = IMG_BY_NM[item.nm];
   if (!imgSrc) return;
 
   imgPopActive = true;
-  // Freeze everything: kpause already handles game loop pause
-  kpause = true;
+  kpause = true; // freezes guards, gas, player — all handled by main loop
 
-  // Play pickup sound + mute BGM
   playPickupSound();
 
-  // Show overlay
   const pop = document.getElementById('imgpop');
-  document.getElementById('imgpop-img').src   = imgSrc;
-  document.getElementById('imgpop-title').textContent = item.nm.toUpperCase();
+  document.getElementById('imgpop-img').src = imgSrc;
+  document.getElementById('imgpop-title').textContent = item.ch + '  ' + item.nm.toUpperCase();
   document.getElementById('imgpop-title').style.color = item.col;
-  document.getElementById('imgpop-fact').textContent  = item.fact;
+  // fact is now HTML
+  const factEl = document.getElementById('imgpop-fact');
+  factEl.innerHTML = item.fact;
   pop.style.display = 'flex';
 
-  // Auto-dismiss after 2 seconds
-  clearTimeout(imgPopT);
-  imgPopT = setTimeout(() => {
+  function dismissPopup() {
+    clearTimeout(imgPopT);
     pop.style.display = 'none';
     imgPopActive = false;
     kpause = false;
-  }, 2000);
+    document.removeEventListener('keydown', onAnyKey);
+    pop.removeEventListener('click', dismissPopup);
+  }
+  function onAnyKey(e) {
+    if (e.target && (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')) return;
+    dismissPopup();
+  }
+  // Any key or click dismisses
+  setTimeout(() => {
+    document.addEventListener('keydown', onAnyKey);
+    pop.addEventListener('click', dismissPopup);
+  }, 500); // 500ms grace so accidental pickup key doesn't instantly close
+
+  // Auto-dismiss after 10s
+  clearTimeout(imgPopT);
+  imgPopT = setTimeout(dismissPopup, 10000);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1286,6 +1578,7 @@ setInterval(checkIdle, 1000);
 
 // Reset idle timer on any movement key
 wrap.addEventListener('keydown', (e) => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   const moveKeys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','A','d','D','w','W','s','S'];
   if (moveKeys.includes(e.key)) resetIdleTimer();
   if (idleActive) dismissIdle();
@@ -1293,9 +1586,161 @@ wrap.addEventListener('keydown', (e) => {
 wrap.addEventListener('click', () => { if (idleActive) dismissIdle(); resetIdleTimer(); });
 
 
+
+// ═══════════════════════════════════════════════════════════
+// STAMINA / SPRINT SYSTEM
+// ═══════════════════════════════════════════════════════════
+let staminaMax    = 5.0;   // 5 seconds of sprint
+let staminaCur    = 5.0;   // current stamina
+let staminaCooldown = 0;   // cooldown timer (15s)
+let staminaActive = false; // currently sprinting
+const STAMINA_COOLDOWN = 15.0;
+const SPRINT_MULT = 3.0;
+
+function updateStamina(dt) {
+  const shiftHeld = keys['Shift'] || keys['ShiftLeft'] || keys['ShiftRight'];
+  const moving = pmov;
+
+  if (shiftHeld && moving && staminaCur > 0 && staminaCooldown <= 0) {
+    staminaActive = true;
+    staminaCur = Math.max(0, staminaCur - dt);
+    if (staminaCur <= 0) {
+      staminaActive = false;
+      staminaCooldown = STAMINA_COOLDOWN;
+    }
+  } else {
+    staminaActive = false;
+    if (staminaCooldown > 0) {
+      staminaCooldown -= dt;
+      if (staminaCooldown <= 0) {
+        staminaCooldown = 0;
+        staminaCur = staminaMax;
+      }
+    } else if (staminaCur < staminaMax && !shiftHeld) {
+      // Passive regen when not trying to sprint (just idle fill)
+      // No passive regen — must wait full cooldown
+    }
+  }
+
+  // Update UI
+  const fill = document.getElementById('stamina-bar-fill');
+  const status = document.getElementById('stamina-status');
+  const sprint = document.getElementById('stamina-sprint');
+  if (fill) {
+    if (staminaCooldown > 0) {
+      const pct = ((STAMINA_COOLDOWN - staminaCooldown) / STAMINA_COOLDOWN * 100).toFixed(0);
+      fill.style.width = pct + '%';
+      fill.style.background = 'linear-gradient(90deg,#662200,#cc4400)';
+      if(status) status.textContent = 'RECHARGING... '+Math.ceil(staminaCooldown)+'s';
+      if(status) status.style.color='#cc4400';
+    } else {
+      const pct = (staminaCur / staminaMax * 100).toFixed(0);
+      fill.style.width = pct + '%';
+      fill.style.background = staminaActive
+        ? 'linear-gradient(90deg,#0088ff,#44ddff)'
+        : 'linear-gradient(90deg,#2244cc,#44aaff)';
+      if(status) { status.textContent = staminaActive ? '' : 'READY'; status.style.color='#44aaff'; }
+    }
+    if(sprint) sprint.style.display = staminaActive ? 'block' : 'none';
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// LEVEL INTRO SCREEN
+// ═══════════════════════════════════════════════════════════
+const LEVEL_STORIES = [
+  "It's 11:47 PM on campus. The Archives of Contemporary India are supposed to be locked. But you noticed the side door was left ajar. You slip in, heart racing. The night guard does one round every 20 minutes — you have a window. Somewhere inside are 5 knowledge items scattered across the stacks.",
+  "You made it to Level 2. The Lamination Room is deeper in the archive. The fumigation cycle started earlier tonight — you can smell it faintly. The guard has company now. Navigate carefully through the tight corridors between the shelving units.",
+  "The Scanning Bay. Banks of overhead digitisation equipment cast pale blue light across the corridors. Two guards patrol in overlapping routes. The gas is spreading faster now. You need to move quickly and deliberately.",
+  "The Display Gallery — normally open to researchers by appointment only. Glass cases line the walls. Every footstep echoes. Three guards on rotation. The fumigation gas triggers faster at this depth in the building.",
+  "Midpoint. The Storage Vault. Rows of acid-free boxes stretching to the ceiling. The air is drier here — climate-controlled. The guards know this area well. Gas spreads immediately once you're detected moving away from the entry.",
+  "The Repair Studio. Conservators' tools are laid out on lightboxes. The building feels alive with surveillance now. Four guards, fast. The gas trigger zone tightens — stay close to the exit route.",
+  "The Catalogue Room. Computers still on from the day shift. Filing systems stretch in every direction. The maze has become a labyrinth of identical-looking corridors. Do not hesitate — the guards here are the fastest yet.",
+  "The Photography Archive. Lightboxes, negatives, careful silence required. Five guards now. The gas spreads at near-maximum speed. Every second of hesitation costs you a corridor.",
+  "The Appraisal Desk. Almost at the deepest point of the Archives. Near-total darkness beyond your field of view. Five guards at maximum speed. The gas activates at 10 tile-steps from source. You've come too far to stop.",
+  "FINAL LEVEL — The Exhibition Hall. The grand space where the Archives presents its most significant holdings to the public. Six guards. Maximum gas speed. Exit is across the entire maze. This is what you came for. Complete the run.",
+];
+
+function showLevelIntro(onStart) {
+  const d = DIFF[lv-1];
+  document.getElementById('intro-lvnum').textContent = `LEVEL MAZE ${lv} / 10`;
+  document.getElementById('intro-lvname').textContent = ZONE_NAMES[lv-1];
+  document.getElementById('intro-story').textContent = LEVEL_STORIES[lv-1] || '';
+  document.getElementById('intro-diff').innerHTML =
+    `<b style="color:#c8a84b;">LEVEL DIFFICULTY</b><br>` +
+    `Guards: <b style="color:#cc3333;">${d.gc}</b> &nbsp;|&nbsp; ` +
+    `Guard speed: <b>${d.gcs.toFixed(1)}x</b> &nbsp;|&nbsp; ` +
+    `Gas spread: <b>${d.gi.toFixed(2)}s/tile</b> &nbsp;|&nbsp; ` +
+    `Gas trigger: <b>${d.gt} tiles</b>`;
+  const btn = document.getElementById('intro-btn');
+  btn.textContent = `▶ ENTER ${ZONE_NAMES[lv-1]}`;
+  btn.onclick = () => {
+    document.getElementById('intropop').style.display = 'none';
+    if (onStart) onStart();
+  };
+  document.getElementById('intropop').style.display = 'flex';
+}
+
 // Wire buttons
-document.getElementById('startbtn').onclick = ()=>startGame();
+document.getElementById('startbtn').onclick = ()=>showNameEntry();
+function showNameEntry() {
+  // Check if name already set from a previous session
+  const saved = localStorage.getItem('ashoka_playername');
+  const existingNames = (loadLB()||[]).map(e=>e.playerName.toUpperCase());
+  showMainOv(
+    `<h1>ENTER THE ARCHIVES</h1>
+    <div class="sub">ASHOKA VISUAL ARTS EXPLORER</div>
+    <p style="text-align:center;font-size:14px;color:#887060;margin-bottom:14px;">
+      You are an Ashoka Visual Arts student exploring the Archives<br>
+      after hours — <b style="color:#cc3333">strictly off-limits</b>. Navigate the maze,<br>
+      collect Curiosity Points, and escape before the guards catch you.
+    </p>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;color:#888;display:block;margin-bottom:5px;letter-spacing:1px;">YOUR EXPLORER NAME</label>
+      <input id="nameInput" type="text" maxlength="16"
+        placeholder="Enter your name..."
+        value=""
+        onkeydown="if(event.key==='Enter')submitName()"
+        style="width:100%;padding:8px 10px;background:#0d0d20;border:1.5px solid #c8a84b;color:#e0d8c0;font-family:'Courier New',monospace;font-size:15px;outline:none;box-sizing:border-box;">
+      <div id="nameError" style="color:#cc3333;font-size:13px;margin-top:4px;display:none;"></div>
+    </div>
+    <button class="btn g" onclick="submitName()">▶ ENTER ARCHIVES</button>
+    <button class="btn sm" onclick="showLBScreen()">🏆 LEADERBOARD</button>`
+  );
+  setTimeout(()=>{ const inp=document.getElementById('nameInput'); if(inp){ const sv=localStorage.getItem('ashoka_playername'); if(sv)inp.value=sv; inp.focus(); } },100);
+}
+
+function submitName() {
+  const inp = document.getElementById('nameInput');
+  const errEl = document.getElementById('nameError');
+  if (!inp) return;
+  const name = inp.value.trim().toUpperCase();
+  if (!name || name.length < 2) {
+    errEl.textContent='Name must be at least 2 characters.'; errEl.style.display='block'; return;
+  }
+  // Check for duplicates in leaderboard (existing top-10 entries)
+  const existingNames = (loadLB()||[]).map(e=>e.playerName.toUpperCase());
+  if (existingNames.includes(name)) {
+    errEl.textContent='That name is already on the leaderboard! Choose a unique name.';
+    errEl.style.display='block'; return;
+  }
+  playerName = name;
+  localStorage.setItem('ashoka_playername', name);
+  startGame();
+}
 document.getElementById('lbbtn').onclick    = ()=>showLBScreen();
+
+// Expose to global scope for inline onclick handlers
+window.submitName = submitName;
+window.showNameEntry = showNameEntry;
+window.resumeGame = resumeGame;
+window.startGame = startGame;
+window.restartLv = restartLv;
+window.showLBScreen = showLBScreen;
+window.backFromLB = backFromLB;
+window.dismissIdle = dismissIdle;
+window.showLeaderboard = showLBScreen;
 
 // Start loop idle
 lastTs=performance.now(); loop(lastTs);
