@@ -147,6 +147,11 @@ canvas{display:block;}
   z-index:3;color:#c8a84b;font-family:'Courier New',monospace;
   font-size:14px;letter-spacing:2px;text-align:center;
 }
+
+#winnerpop{position:absolute;inset:0;z-index:25;display:none;align-items:center;justify-content:center;background-size:300% 300%;animation:wg 4s ease infinite;}
+@keyframes wg{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes wpop{0%{transform:scale(0)rotate(-180deg);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+#winnerbox{background:rgba(4,4,16,.94);border:2px solid rgba(255,255,255,.12);padding:24px 28px;max-width:540px;width:92%;text-align:center;color:#e0d8c0;font-family:'Courier New',monospace;max-height:88vh;overflow-y:auto;}
 </style>
 </head>
 <body>
@@ -200,7 +205,7 @@ canvas{display:block;}
   <div id="ov">
     <div id="ovbox">
       <h1>ASHOKA ARCHIVES</h1>
-      <h2>THE MAZE · 10 LEVELS</h2>
+      <h2>THE MAZE · 5 LEVELS</h2>
       <p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>
       <span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be gassed!<br>
       <span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>
@@ -209,9 +214,11 @@ canvas{display:block;}
       <button class="btn g" id="startbtn">▶ ENTER ARCHIVES — LEVEL MAZE 1</button>
       <button class="btn sm" id="lbbtn">🏆 NO-DEATH LEADERBOARD</button>
       <div style="font-size:13px;color:#333;margin-top:4px;">WASD / ARROWS — move &nbsp;|&nbsp; R — restart level &nbsp;|&nbsp; C — checkpoint &nbsp;|&nbsp; ESC — pause</div>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(200,168,75,.12);font-size:11px;color:#555;text-align:center;line-height:1.8;">Developed by <b style="color:#c8a84b;">Lazarous Moyo</b> &middot; ASP26 &middot; UG24<br>Media Studies &amp; CS &middot; &copy;2026<br><a href="https://www.linkedin.com/in/lazarous-moyo/" target="_blank" style="color:#4488ff;text-decoration:none;">&#128279; LinkedIn</a></div>
     </div>
   </div>
 
+  <div id="winnerpop"><div id="winnerbox"></div></div>
   <!-- Death popup -->
   <div id="deathpop">
     <div id="deathbox">
@@ -271,6 +278,11 @@ canvas{display:block;}
   </div>
   <div class="sb-title" style="margin-top:8px;">LEVEL</div>
   <div id="sb-level" style="font-size:14px;color:#a09080;line-height:1.9;text-align:center;">—</div>
+  <div style="margin-top:auto;padding-top:8px;border-top:1px solid rgba(200,168,75,.15);font-size:11px;color:#666;text-align:center;line-height:1.8;">
+    <b style="color:#c8a84b;">Lazarous Moyo</b><br>ASP26 &middot; UG24<br>Media Studies &amp; CS<br>
+    <span style="font-size:10px;color:#444;">&copy; 2026</span><br>
+    <a href="https://www.linkedin.com/in/lazarous-moyo/" target="_blank" style="color:#4488ff;text-decoration:none;font-size:11px;">&#128279; LinkedIn</a>
+  </div>
 </div>
 </div>
 
@@ -326,21 +338,17 @@ const ZONE_NAMES = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// DIFFICULTY TABLE — 10 levels, speed changes only
+// DIFFICULTY TABLE — 5 levels
 // gc=guard count, gs=patrol speed, gcs=chase speed,
 // gi=gas interval(s/tile), gt=gas trigger dist(tiles)
 // ═══════════════════════════════════════════════════════════
-const DIFF = [
-  {gc:2, gs:0.80, gcs:1.50, gi:2.20, gt:4},   // 1
-  {gc:2, gs:0.95, gcs:1.75, gi:1.90, gt:4},   // 2
-  {gc:3, gs:1.10, gcs:2.00, gi:1.65, gt:4},   // 3
-  {gc:3, gs:1.25, gcs:2.30, gi:1.40, gt:4},   // 4
-  {gc:4, gs:1.40, gcs:2.60, gi:1.15, gt:10},  // 5
-  {gc:4, gs:1.55, gcs:2.90, gi:0.95, gt:10},  // 6
-  {gc:4, gs:1.72, gcs:3.20, gi:0.78, gt:10},  // 7
-  {gc:5, gs:1.90, gcs:3.60, gi:0.62, gt:10},  // 8
-  {gc:5, gs:2.10, gcs:4.00, gi:0.49, gt:10},  // 9
-  {gc:6, gs:2.35, gcs:4.50, gi:0.38, gt:10},  // 10
+const MAX_LV=5;
+const DIFF=[
+  {gc:2,gs:0.80,gcs:1.50,gi:2.20,gt:4},
+  {gc:3,gs:1.10,gcs:2.10,gi:1.60,gt:4},
+  {gc:3,gs:1.40,gcs:2.60,gi:1.20,gt:10},
+  {gc:4,gs:1.75,gcs:3.20,gi:0.80,gt:10},
+  {gc:5,gs:2.20,gcs:4.20,gi:0.45,gt:10},
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -587,11 +595,22 @@ let lvScore = 0; // score earned this level (for transition screen)
 const LB_KEY = 'ashoka_lb_v3';
 function loadLB() { try{ return JSON.parse(localStorage.getItem(LB_KEY))||[]; }catch(e){ return []; } }
 function saveLB(e) { try{ localStorage.setItem(LB_KEY, JSON.stringify(e)); }catch(x){} }
-function recordRun(ms, cur) {
-  let e = loadLB();
-  e.push({timeMs:ms, dateISO:new Date().toISOString(), curiosity:cur, playerName:playerName||'EXPLORER'});
-  e.sort((a,b)=>a.timeMs!==b.timeMs?a.timeMs-b.timeMs:b.curiosity-a.curiosity);
-  e = e.slice(0,10); saveLB(e); return e;
+function recordRun(ms,cur,rating){
+  let e=loadLB();
+  const rV=r=>r==='A'?3:r==='B'?2:1;
+  const nm=playerName||'EXPLORER';
+  const entry={timeMs:ms,dateISO:new Date().toISOString(),curiosity:cur,playerName:nm,rating:rating||'C'};
+  const ix=e.findIndex(x=>x.playerName===nm);
+  if(ix>=0){const o=e[ix];if(ms<o.timeMs||(ms===o.timeMs&&cur>o.curiosity)||(ms===o.timeMs&&cur===o.curiosity&&rV(rating)>rV(o.rating)))e[ix]=entry;}
+  else e.push(entry);
+  e.sort((a,b)=>a.timeMs!==b.timeMs?a.timeMs-b.timeMs:b.curiosity!==a.curiosity?b.curiosity-a.curiosity:rV(b.rating)-rV(a.rating));
+  e=e.slice(0,10);saveLB(e);
+  const tN=i=>i===0?'LEGENDARY':i===1?'GRANDMASTER':i===2?'PRO':'LEADERBOARD';
+  const lines=['ASHOKA ARCHIVES — EXPLORER LEADERBOARD','Updated: '+new Date().toLocaleString(),'',
+    'POS | TIER         | NAME             | TIME     | CURIOSITY | RANK','-'.repeat(65)];
+  e.forEach((x,i)=>lines.push((i+1)+'   | '+tN(i).padEnd(13)+'| '+x.playerName.padEnd(17)+'| '+fmtMs(x.timeMs).padEnd(9)+'| '+String(x.curiosity).padStart(2)+'/25      | '+(x.rating||'-')));
+  try{localStorage.setItem('ashoka_lb_txt',lines.join('\n'));}catch(z){}
+  return e;
 }
 function fmtMs(ms) {
   const s=Math.floor(ms/1000), m=Math.floor(s/60), ss=s%60, mss=Math.floor((ms%1000)/10);
@@ -880,31 +899,25 @@ function triggerWin() {
   const bonus = Math.max(0, 500 - lvTimer*3) + lvCurioCollected*50;
   lvScore = bonus;
 
-  if (lv >= 10) {
-    // Full run complete
-    const totalMs = Date.now() - runStartMs;
-    const entries = noDeath ? recordRun(totalMs, curioCollected) : loadLB();
-    const ndMsg = noDeath
-      ? `<div style="color:#22cc55;margin:8px 0;font-size:15px;">🏆 NO-DEATH RUN COMPLETE!<br>Time: <b>${fmtMs(totalMs)}</b></div>`
-      : `<div style="color:#cc3333;margin:8px 0;">Run completed with ${deaths} death${deaths>1?'s':''} — no-death not eligible</div>`;
-    let lbHtml='';
-    if (entries.length) {
-      lbHtml=`<div style="margin:10px 0 4px;color:#c8a84b;font-size:14px;font-weight:bold;">TOP NO-DEATH TIMES</div>`;
-      for(let i=0;i<Math.min(entries.length,5);i++){
-        const e=entries[i];
-        lbHtml+=`<div style="font-size:13px;padding:2px 0;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
-          `${i+1}. ${e.playerName} — ${fmtMs(e.timeMs)} · ★${e.curiosity}</div>`;
-      }
+  if (lv >= MAX_LV) {
+    sc='won'; clearInterval(tInt);
+    const totalMs=Date.now()-runStartMs;
+    let rating,rLabel,rCol,rGrad,rMsg;
+    if(deaths===0&&curioCollected>=25){
+      rating='A';rLabel='LEGENDARY EXPLORER';rCol='#ff8c00';
+      rGrad='linear-gradient(135deg,#ff6a00,#ff8c00,#ffb347)';
+      rMsg='Perfect run. No deaths. All 25 Curiosity Points collected. The Archives yield every secret.';
+    } else if(deaths===0){
+      rating='B';rLabel='SKILLED NAVIGATOR';rCol='#ffd200';
+      rGrad='linear-gradient(135deg,#f7971e,#ffd200,#ffe259)';
+      rMsg='Escaped without dying. But some knowledge was left behind. The Archives have more.';
+    } else {
+      rating='C';rLabel='ARCHIVE SURVIVOR';rCol='#4488ff';
+      rGrad='linear-gradient(135deg,#1a6dff,#4488ff,#c822ff)';
+      rMsg='You escaped, but death visited '+deaths+' time'+(deaths>1?'s':'')+'. The Archives remember every stumble.';
     }
-    showMainOv(
-      `<h1 style="color:#22cc55">ARCHIVES COMPLETE!</h1>`+
-      `<div class="sub">ALL 10 LEVEL MAZES CLEARED</div>`+
-      ndMsg+
-      `<div style="margin:6px 0 14px;font-size:14px;">★ Curiosity: <b>${curioCollected}/50</b> &nbsp;|&nbsp; Time: <b>${fmtMs(totalMs)}</b></div>`+
-      lbHtml+`<br>`+
-      `<button class="btn g" onclick="startGame()">▶ NEW RUN</button>`+
-      `<button class="btn sm" onclick="showLBScreen()">🏆 LEADERBOARD</button>`
-    );
+    const entries=recordRun(totalMs,curioCollected,rating);
+    showWinnerScreen(rating,rLabel,rCol,rGrad,rMsg,totalMs,entries);
     return;
   }
 
@@ -915,11 +928,11 @@ function triggerWin() {
   document.getElementById('lvnum').style.color = '#22cc55';
   document.getElementById('lvname').textContent = ZONE_NAMES[lv-1];
 
-  const nextDiff = DIFF[lv]; // next level's difficulty
+  const nextDiff=DIFF[Math.min(lv,DIFF.length-1)];
   document.getElementById('lvstats').innerHTML =
     `Curiosity Points collected: <b style="color:#ffaa22">${lvCurioCollected}/5</b><br>`+
     `Level time: <b>${lvTimer}s</b> &nbsp;|&nbsp; Bonus: <b>+${lvScore}</b><br>`+
-    `Total curiosity: <b style="color:#ffaa22">★ ${curioCollected}</b><br><br>`+
+    `Total curiosity: <b style="color:#ffaa22">★ ${curioCollected}/25</b><br><br>`+
     `<span style="color:#c8a84b">— NEXT: LEVEL MAZE ${lv+1} — ${ZONE_NAMES[lv]} —</span><br>`+
     `<span style="font-size:13px;color:#555;">`+
     `Guards: ${nextDiff.gc} &nbsp;|&nbsp; Guard speed: ×${nextDiff.gcs.toFixed(2)} &nbsp;|&nbsp; Gas spread: ${nextDiff.gi.toFixed(2)}s/tile</span>`;
@@ -977,21 +990,27 @@ function pauseGame() {
 }
 function resumeGame() { sc='playing'; document.getElementById('ov').style.display='none'; startTimer(); }
 
-function showLBScreen() {
-  const entries=loadLB();
-  let html=`<h1>NO-DEATH LEADERBOARD</h1>`+
-    `<div class="sub">COMPLETE ALL 10 LEVEL MAZES WITHOUT DYING</div>`;
-  if (!entries.length) {
-    html+=`<p style="color:#555;text-align:center;">No entries yet!<br>Complete all 10 levels without dying to appear here.</p>`;
-  } else {
-    for(let i=0;i<entries.length;i++){
-      const e=entries[i], d=new Date(e.dateISO);
-      html+=`<div style="font-size:14px;padding:4px 0;border-bottom:1px solid #111;text-align:left;color:${i===0?'#ffd700':i<3?'#c8a84b':'#555'};">`+
-        `${i+1}. ${e.playerName} — ${fmtMs(e.timeMs)} &nbsp;|&nbsp; ★${e.curiosity} &nbsp;|&nbsp; ${d.getMonth()+1}/${d.getDate()}</div>`;
-    }
-  }
-  html+=`<br><button class="btn sm" onclick="backFromLB()">◀ BACK</button>`;
-  showMainOv(html);
+function showLBScreen(){
+  const e=loadLB();
+  const tN=i=>i===0?'LEGENDARY':i===1?'GRANDMASTER':i===2?'PRO':'LEADERBOARD';
+  const tC=i=>i===0?'#ff8c00':i===1?'#ffd200':i===2?'#4488ff':'#999';
+  const rC=r=>r==='A'?'#ff8c00':r==='B'?'#ffd200':'#4488ff';
+  const rows=e.length?e.slice(0,10).map((x,i)=>`<tr style="border-bottom:1px solid #1a1a2a;">
+    <td style="padding:5px 7px;color:${tC(i)};font-weight:bold;font-size:11px;white-space:nowrap;">${tN(i)}</td>
+    <td style="padding:5px 7px;color:#e0d8c0;">${x.playerName}</td>
+    <td style="padding:5px 7px;color:#c8a84b;">${fmtMs(x.timeMs)}</td>
+    <td style="padding:5px 7px;color:#ffaa22;text-align:center;">${x.curiosity}/25</td>
+    <td style="padding:5px 7px;color:${rC(x.rating||'C')};font-weight:bold;text-align:center;">${x.rating||'-'}</td>
+  </tr>`).join(''):`<tr><td colspan="5" style="color:#444;padding:12px;text-align:center;">No explorers yet — complete all 5 levels!</td></tr>`;
+  showMainOv(`<h1>&#127942; EXPLORER LEADERBOARD</h1>
+    <div class="sub" style="margin-bottom:10px;">TOP 10 ALL-TIME &nbsp;·&nbsp; TIME &#9658; CURIOSITY &#9658; RANK</div>
+    <table style="width:100%;border-collapse:collapse;font-family:'Courier New',monospace;font-size:13px;margin-bottom:12px;">
+      <tr style="color:#555;font-size:11px;border-bottom:1px solid #333;">
+        <td style="padding:3px 7px;">TIER</td><td style="padding:3px 7px;">EXPLORER</td>
+        <td style="padding:3px 7px;">TIME</td><td style="padding:3px 7px;">CURIOSITY</td><td style="padding:3px 7px;">RANK</td>
+      </tr>${rows}
+    </table>
+    <button class="btn sm" onclick="backFromLB()">&#9664; BACK</button>`);
 }
 function backFromLB() {
   if (sc==='playing'||sc==='paused') resumeGame();
@@ -1006,7 +1025,7 @@ function notify(msg, dur=2000) {
 }
 
 function mainMenuHTML() {
-  return `<h1>ASHOKA ARCHIVES</h1><h2>THE MAZE · 10 LEVELS</h2>`+
+  return `<h1>ASHOKA ARCHIVES</h1><h2>THE MAZE · 5 LEVELS</h2>`+
     `<p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>`+
     `<span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be sent to the Infirmary!<br>`+
     `<span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>`+
@@ -1359,7 +1378,7 @@ function drawMinimap() {
 
   // Update sidebar run info
   const sbi = document.getElementById('sb-info');
-  if(sbi) sbi.innerHTML=`Level: ${lv}/10<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/5<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
+  if(sbi) sbi.innerHTML=`Level: ${lv}/5<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/5<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
   const sbl = document.getElementById('sb-level');
   if(sbl) sbl.innerHTML=`<b style="color:#c8a84b">${ZONE_NAMES[lv-1]||''}</b><br><span style="font-size:15px;color:#555">${lv<10?'Next: '+ZONE_NAMES[lv]:''}</span>`;
 }
@@ -1374,7 +1393,7 @@ function drawHUD() {
   const timeStr=(m>0?m+'m ':'')+s+'s';
   const curioPct=`★${curioCollected}`;
   document.getElementById('hud').innerHTML=
-    `<span>LEVEL MAZE ${lv}/10 · ${ZONE_NAMES[lv-1]}</span>`+
+    `<span>LEVEL MAZE ${lv}/5 · ${ZONE_NAMES[lv-1]}</span>`+
     `<span>${timeStr} · ${curioPct} · ${gasLbl}</span>`+
     `<span>${hearts} · ${nd}</span>`;
 }
@@ -1664,7 +1683,7 @@ const LEVEL_STORIES = [
 
 function showLevelIntro(onStart) {
   const d = DIFF[lv-1];
-  document.getElementById('intro-lvnum').textContent = `LEVEL MAZE ${lv} / 10`;
+  document.getElementById('intro-lvnum').textContent = `LEVEL MAZE ${lv} / 5`;
   document.getElementById('intro-lvname').textContent = ZONE_NAMES[lv-1];
   document.getElementById('intro-story').textContent = LEVEL_STORIES[lv-1] || '';
   document.getElementById('intro-diff').innerHTML =
@@ -1741,6 +1760,53 @@ window.showLBScreen = showLBScreen;
 window.backFromLB = backFromLB;
 window.dismissIdle = dismissIdle;
 window.showLeaderboard = showLBScreen;
+
+function showWinnerScreen(rating,rLabel,rCol,rGrad,rMsg,totalMs,entries){
+  const pop=document.getElementById('winnerpop');
+  pop.style.background=rGrad;
+  const tN=i=>i===0?'LEGENDARY':i===1?'GRANDMASTER':i===2?'PRO':'LEADERBOARD';
+  const tC=i=>i===0?'#ff8c00':i===1?'#ffd200':i===2?'#4488ff':'#999';
+  const rC=r=>r==='A'?'#ff8c00':r==='B'?'#ffd200':'#4488ff';
+  const icon=rating==='A'?'🏆':rating==='B'?'⭐':'🎖';
+  const rows=entries.slice(0,10).map((x,i)=>`<tr style="border-bottom:1px solid #1a1a2a;">
+    <td style="padding:4px 6px;color:${tC(i)};font-weight:bold;font-size:11px;white-space:nowrap;">${tN(i)}</td>
+    <td style="padding:4px 6px;color:#e0d8c0;">${x.playerName}</td>
+    <td style="padding:4px 6px;color:#c8a84b;">${fmtMs(x.timeMs)}</td>
+    <td style="padding:4px 6px;color:#ffaa22;text-align:center;">${x.curiosity}/25</td>
+    <td style="padding:4px 6px;color:${rC(x.rating||'C')};font-weight:bold;text-align:center;">${x.rating||'-'}</td>
+  </tr>`).join('')||`<tr><td colspan="5" style="color:#444;padding:8px;text-align:center;">No entries yet</td></tr>`;
+  document.getElementById('winnerbox').innerHTML=`
+    <div style="font-size:52px;animation:wpop .7s ease forwards;">${icon}</div>
+    <div style="font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.4);margin:4px 0 2px;">YOU ESCAPED THE ARCHIVES</div>
+    <div style="font-size:44px;font-weight:bold;color:${rCol};text-shadow:0 0 24px ${rCol};margin-bottom:2px;">${rating}</div>
+    <div style="font-size:15px;font-weight:bold;color:${rCol};margin-bottom:10px;">${rLabel}</div>
+    <div style="font-size:12px;color:#b0a898;max-width:360px;margin:0 auto 14px;line-height:1.7;">${rMsg}</div>
+    <div style="display:flex;gap:18px;justify-content:center;margin-bottom:14px;">
+      <div><div style="color:#555;font-size:10px;">TIME</div><div style="color:#e0d8c0;font-weight:bold;">${fmtMs(totalMs)}</div></div>
+      <div><div style="color:#555;font-size:10px;">CURIOSITY</div><div style="color:#ffaa22;font-weight:bold;">${curioCollected}/25</div></div>
+      <div><div style="color:#555;font-size:10px;">DEATHS</div><div style="color:${deaths>0?'#cc3333':'#22cc55'};font-weight:bold;">${deaths}</div></div>
+      <div><div style="color:#555;font-size:10px;">RANK</div><div style="color:${rCol};font-weight:bold;">${rating}</div></div>
+    </div>
+    <div style="font-size:12px;color:#c8a84b;font-weight:bold;margin-bottom:6px;border-top:1px solid rgba(200,168,75,.2);padding-top:10px;">&#127942; EXPLORER LEADERBOARD</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;">
+      <tr style="color:#444;font-size:11px;border-bottom:1px solid #333;">
+        <td style="padding:3px 6px;">TIER</td><td style="padding:3px 6px;">EXPLORER</td>
+        <td style="padding:3px 6px;">TIME</td><td style="padding:3px 6px;">CURIOSITY</td><td style="padding:3px 6px;">RANK</td>
+      </tr>${rows}
+    </table>
+    <div style="font-size:10px;color:#555;margin-bottom:10px;line-height:1.7;">
+      Developed by <b style="color:#c8a84b;">Lazarous Moyo</b> &middot; ASP26 &middot; UG24 &middot; Media Studies &amp; CS &middot; &copy;2026<br>
+      <a href="https://www.linkedin.com/in/lazarous-moyo/" target="_blank" style="color:#4488ff;text-decoration:none;">&#128279; LinkedIn</a>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn g" style="width:auto;padding:9px 22px;" onclick="startGame()">&#9654; NEW RUN</button>
+      <button class="btn" style="width:auto;padding:9px 22px;" onclick="document.getElementById('winnerpop').style.display='none';showLBScreen();">&#128202; LEADERBOARD</button>
+    </div>`;
+  pop.style.display='flex';
+}
+window.showWinnerScreen=showWinnerScreen;
+window.showLBScreen=showLBScreen;
+window.backFromLB=backFromLB;
 
 // Start loop idle
 lastTs=performance.now(); loop(lastTs);
