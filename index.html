@@ -593,8 +593,41 @@ let lvScore = 0; // score earned this level (for transition screen)
 // LEADERBOARD
 // ═══════════════════════════════════════════════════════════
 const LB_KEY = 'ashoka_lb_v3';
-function loadLB() { try{ return JSON.parse(localStorage.getItem(LB_KEY))||[]; }catch(e){ return []; } }
-function saveLB(e) { try{ localStorage.setItem(LB_KEY, JSON.stringify(e)); }catch(x){} }
+// ── Google Sheets global leaderboard ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-nRDxfqzGiHvNlLePtz0i1kCiIup5VlE6jwe98_r_VcuGestH2Onp6zClhWhQpvRGuQ/exec';
+
+function loadLBLocal(){try{return JSON.parse(localStorage.getItem(LB_KEY))||[];}catch(e){return[];}}
+function saveLBLocal(e){try{localStorage.setItem(LB_KEY,JSON.stringify(e));}catch(x){}}
+
+async function fetchLB(){
+  try{
+    const r = await fetch(GAS_URL, {method:'GET', mode:'cors'});
+    if(!r.ok) throw new Error(r.status);
+    const arr = await r.json();
+    if(Array.isArray(arr) && arr.length) saveLBLocal(arr);
+    return Array.isArray(arr) ? arr : loadLBLocal();
+  }catch(e){
+    console.warn('Sheets fetch failed, using local cache', e);
+    return loadLBLocal();
+  }
+}
+
+async function pushLB(entries){
+  saveLBLocal(entries);
+  try{
+    await fetch(GAS_URL, {
+      method:'POST',
+      mode:'cors',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify(entries)
+    });
+  }catch(e){console.warn('Sheets push failed', e);}
+}
+
+function loadLB(){return loadLBLocal();}
+function saveLB(e){pushLB(e);}
+
+
 function recordRun(ms,cur,rating){
   let e=loadLB();
   const rV=r=>r==='A'?3:r==='B'?2:1;
@@ -604,7 +637,23 @@ function recordRun(ms,cur,rating){
   if(ix>=0){const o=e[ix];if(ms<o.timeMs||(ms===o.timeMs&&cur>o.curiosity)||(ms===o.timeMs&&cur===o.curiosity&&rV(rating)>rV(o.rating)))e[ix]=entry;}
   else e.push(entry);
   e.sort((a,b)=>a.timeMs!==b.timeMs?a.timeMs-b.timeMs:b.curiosity!==a.curiosity?b.curiosity-a.curiosity:rV(b.rating)-rV(a.rating));
-  e=e.slice(0,10);saveLB(e);
+  e=e.slice(0,10);saveLBLocal(e);
+  // Background global sync: fetch current, merge, push back
+  (async()=>{
+    try{
+      const remote=await fetchLB();
+      const rV2=r=>r==='A'?3:r==='B'?2:1;
+      // Merge local entry into remote
+      const merged=[...remote];
+      const ix2=merged.findIndex(x=>x.playerName===nm);
+      if(ix2>=0){const o2=merged[ix2];if(ms<o2.timeMs||(ms===o2.timeMs&&cur>o2.curiosity))merged[ix2]=entry;}
+      else merged.push(entry);
+      merged.sort((a,b)=>a.timeMs!==b.timeMs?a.timeMs-b.timeMs:b.curiosity!==a.curiosity?b.curiosity-a.curiosity:rV2(b.rating||'C')-rV2(a.rating||'C'));
+      const final=merged.slice(0,10);
+      await pushLB(final);
+      saveLBLocal(final);
+    }catch(z){console.warn('sync failed',z);}
+  })();
   const tN=i=>i===0?'LEGENDARY':i===1?'GRANDMASTER':i===2?'PRO':'LEADERBOARD';
   const lines=['ASHOKA ARCHIVES — EXPLORER LEADERBOARD','Updated: '+new Date().toLocaleString(),'',
     'POS | TIER         | NAME             | TIME     | CURIOSITY | RANK','-'.repeat(65)];
@@ -991,7 +1040,11 @@ function pauseGame() {
 function resumeGame() { sc='playing'; document.getElementById('ov').style.display='none'; startTimer(); }
 
 function showLBScreen(){
-  const e=loadLB();
+  // Show cached immediately, then refresh from global board
+  _renderLB(loadLBLocal());
+  fetchLB().then(entries=>{ if(entries.length) _renderLB(entries); });
+}
+function _renderLB(e){
   const tN=i=>i===0?'LEGENDARY':i===1?'GRANDMASTER':i===2?'PRO':'LEADERBOARD';
   const tC=i=>i===0?'#ff8c00':i===1?'#ffd200':i===2?'#4488ff':'#999';
   const rC=r=>r==='A'?'#ff8c00':r==='B'?'#ffd200':'#4488ff';
@@ -1420,6 +1473,7 @@ function startGame() {
   document.getElementById('kp').style.display='none';
   buildLevel(); spawnEntities(); startTimer();
   wrap.focus();
+  fetchLB().then(r=>{if(r.length)saveLBLocal(r);});
   notify(`LEVEL MAZE 1 — ${ZONE_NAMES[0]} — All 5 Curiosity Points scattered!`,3000);
   if (!raf) { lastTs=performance.now(); loop(lastTs); }
 }
