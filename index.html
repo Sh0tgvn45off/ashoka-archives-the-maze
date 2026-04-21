@@ -979,7 +979,7 @@ function triggerWin() {
 
   const nextDiff=DIFF[Math.min(lv,DIFF.length-1)];
   document.getElementById('lvstats').innerHTML =
-    `Curiosity Points collected: <b style="color:#ffaa22">${lvCurioCollected}/5</b><br>`+
+    `Curiosity Points collected: <b style="color:#ffaa22">${lvCurioCollected}/25</b><br>`+
     `Level time: <b>${lvTimer}s</b> &nbsp;|&nbsp; Bonus: <b>+${lvScore}</b><br>`+
     `Total curiosity: <b style="color:#ffaa22">★ ${curioCollected}/25</b><br><br>`+
     `<span style="color:#c8a84b">— NEXT: LEVEL MAZE ${lv+1} — ${ZONE_NAMES[lv]} —</span><br>`+
@@ -1431,7 +1431,7 @@ function drawMinimap() {
 
   // Update sidebar run info
   const sbi = document.getElementById('sb-info');
-  if(sbi) sbi.innerHTML=`Level: ${lv}/5<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/5<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
+  if(sbi) sbi.innerHTML=`Level: ${lv}/5<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/25<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
   const sbl = document.getElementById('sb-level');
   if(sbl) sbl.innerHTML=`<b style="color:#c8a84b">${ZONE_NAMES[lv-1]||''}</b><br><span style="font-size:15px;color:#555">${lv<10?'Next: '+ZONE_NAMES[lv]:''}</span>`;
 }
@@ -1446,7 +1446,7 @@ function drawHUD() {
   const timeStr=(m>0?m+'m ':'')+s+'s';
   const curioPct=`★${curioCollected}`;
   document.getElementById('hud').innerHTML=
-    `<span>LEVEL MAZE ${lv}/5 · ${ZONE_NAMES[lv-1]}</span>`+
+    `<span>LEVEL MAZE ${lv}/25 · ${ZONE_NAMES[lv-1]}</span>`+
     `<span>${timeStr} · ${curioPct} · ${gasLbl}</span>`+
     `<span>${hearts} · ${nd}</span>`;
 }
