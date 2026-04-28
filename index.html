@@ -16,7 +16,7 @@ body{background:#05050e;display:flex;align-items:center;justify-content:center;m
 .legend-item{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:15px;color:#c0b090;}
 .legend-swatch{width:12px;height:12px;flex-shrink:0;border-radius:2px;}
 .legend-swatch.wall{background:#13122a;border:1px solid rgba(200,168,75,0.25);}
-.legend-swatch.floor{background:#FFFFFF;border:1px solid #FFFFFF;}
+.legend-swatch.floor{background:#1e1a2e;border:1px solid #2a2845;}
 .legend-swatch.exit{background:#22cc55;}
 .legend-swatch.spike{background:#cc2222;}
 .legend-swatch.gas{background:rgba(28,200,75,0.7);}
@@ -152,6 +152,26 @@ canvas{display:block;}
 @keyframes wg{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 @keyframes wpop{0%{transform:scale(0)rotate(-180deg);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 #winnerbox{background:rgba(4,4,16,.94);border:2px solid rgba(255,255,255,.12);padding:24px 28px;max-width:540px;width:92%;text-align:center;color:#e0d8c0;font-family:'Courier New',monospace;max-height:88vh;overflow-y:auto;}
+
+/* controller */
+#ctrl-badge{position:absolute;bottom:38px;left:8px;background:rgba(0,0,0,.8);border:1px solid rgba(200,168,75,.3);color:#c8a84b;font-size:10px;padding:3px 8px;z-index:4;pointer-events:none;display:none;font-family:'Courier New',monospace;}
+/* input chooser overlay */
+#inputchooser{position:absolute;inset:0;background:rgba(0,0,0,.92);z-index:30;display:none;align-items:center;justify-content:center;}
+#inputbox{border:2px solid #c8a84b;background:#0b0b1c;padding:28px 32px;width:340px;text-align:center;color:#e0d8c0;font-family:'Courier New',monospace;}
+#inputbox h2{color:#c8a84b;font-size:15px;margin-bottom:6px;}
+#inputbox p{font-size:11px;color:#888;margin-bottom:18px;line-height:1.7;}
+.ibtn{display:block;width:100%;padding:12px;margin-bottom:10px;background:transparent;border:1.5px solid #c8a84b;color:#c8a84b;font-family:'Courier New',monospace;font-size:13px;cursor:pointer;}
+.ibtn:hover,.ibtn:active{background:#c8a84b;color:#000;}
+.ibtn.g{border-color:#22cc55;color:#22cc55;}
+.ibtn.g:hover{background:#22cc55;color:#000;}
+
+#lvchooser{position:absolute;inset:0;background:rgba(0,0,0,.93);z-index:29;display:none;align-items:center;justify-content:center;}
+#lvchooserbox{border:2px solid #c8a84b;background:#0b0b1c;padding:26px 30px;width:360px;text-align:center;color:#e0d8c0;font-family:'Courier New',monospace;}
+#lvchooserbox h2{color:#c8a84b;font-size:15px;margin-bottom:6px;}
+#lvchooserbox p{font-size:11px;color:#888;margin-bottom:14px;line-height:1.7;}
+.lvcbtn{display:inline-block;width:48px;height:48px;line-height:48px;margin:4px;background:transparent;border:1.5px solid #c8a84b;color:#c8a84b;font-family:'Courier New',monospace;font-size:14px;cursor:pointer;font-weight:bold;}
+.lvcbtn:hover,.lvcbtn.sel{background:#c8a84b;color:#000;}
+.lvcbtn.sel{box-shadow:0 0 12px #c8a84b;}
 </style>
 </head>
 <body>
@@ -167,6 +187,9 @@ canvas{display:block;}
   <div class="legend-item"><div class="legend-swatch item"></div>Curiosity Point</div>
   <div class="legend-item"><div class="legend-swatch guard"></div>Guard (CADI)</div>
   <div class="legend-item"><div class="legend-swatch cp"></div>Checkpoint</div>
+  <div class="sb-title" style="margin-top:10px;">CHAOS MODE</div>
+  <button onclick="startChaos()" style="width:100%;padding:8px 4px;background:transparent;border:1.5px solid #ff4444;color:#ff4444;font-family:'Courier New',monospace;font-size:11px;cursor:pointer;margin-bottom:4px;">&#128683; TRY CHAOS MODE</button>
+  <div style="font-size:10px;color:#555;line-height:1.6;">10 guards · max speed · unranked</div>
   <div class="sb-title" style="margin-top:10px;">CONTROLS</div>
   <div style="font-size:14px;color:#a09080;line-height:1.9;">
     WASD / ↑↓←→ — Move<br>SHIFT — Sprint (5s)<br>C — Checkpoint<br>R — Restart<br>ESC — Pause<br>L — Leaderboard
@@ -206,7 +229,7 @@ canvas{display:block;}
     <div id="ovbox">
       <h1>ASHOKA ARCHIVES</h1>
       <h2>THE MAZE · 5 LEVELS</h2>
-      <p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 5 unique corridor mazes through the Ashoka University Archives.<br>
+      <p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>
       <span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be gassed!<br>
       <span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>
       Collect all <b style="color:#ffaa22">5 Curiosity Points</b> scattered in each level.<br>
@@ -219,6 +242,33 @@ canvas{display:block;}
   </div>
 
   <div id="winnerpop"><div id="winnerbox"></div></div>
+  <!-- Level chooser -->
+  <div id="lvchooser">
+    <div id="lvchooserbox">
+      <h2>CHOOSE STARTING LEVEL</h2>
+      <p>All 5 levels required for ranking.<br>Starting from Level 2+ disables leaderboard eligibility.</p>
+      <div id="lvc-btns" style="margin-bottom:16px;">
+        <button class="lvcbtn sel" onclick="setStartLv(1)">1</button>
+        <button class="lvcbtn" onclick="setStartLv(2)">2</button>
+        <button class="lvcbtn" onclick="setStartLv(3)">3</button>
+        <button class="lvcbtn" onclick="setStartLv(4)">4</button>
+        <button class="lvcbtn" onclick="setStartLv(5)">5</button>
+      </div>
+      <div id="lvc-note" style="font-size:11px;color:#22cc55;margin-bottom:14px;">Starting Level 1 — Ranking ENABLED ✓</div>
+      <button class="btn g" style="margin-bottom:0;" onclick="confirmStartLv()">&#9654; CONFIRM</button>
+    </div>
+  </div>
+  <!-- Input chooser -->
+  <div id="inputchooser">
+    <div id="inputbox">
+      <h2>SELECT INPUT METHOD</h2>
+      <p>Choose how you want to play.<br>You will still need a keyboard to type your name.</p>
+      <button class="ibtn g" id="kb-btn">⌨ KEYBOARD &amp; MOUSE</button>
+      <button class="ibtn" id="gp-btn">🎮 XBOX CONTROLLER (USB)</button>
+      <p style="font-size:10px;color:#444;margin-top:6px;">Controller detected automatically when connected.</p>
+    </div>
+  </div>
+  <div id="ctrl-badge">🎮 CONTROLLER ACTIVE</div>
   <!-- Death popup -->
   <div id="deathpop">
     <div id="deathbox">
@@ -350,6 +400,11 @@ const DIFF=[
   {gc:4,gs:1.75,gcs:3.20,gi:0.80,gt:10},
   {gc:5,gs:2.20,gcs:4.20,gi:0.45,gt:10},
 ];
+// CHAOS MODE — level 6, not ranked
+const CHAOS_DIFF={gc:10,gs:4.50,gcs:6.00,gi:0.20,gt:10};
+let chaosMode=false;
+let startLevel=1; // chosen start level
+function getLvDiff(){ return chaosMode ? CHAOS_DIFF : DIFF[Math.min(lv-1,DIFF.length-1)]; }
 
 // ═══════════════════════════════════════════════════════════
 // SEEDED RNG — gives reproducible maze per level
@@ -670,6 +725,7 @@ function fmtMs(ms) {
 // BUILD LEVEL
 // ═══════════════════════════════════════════════════════════
 function buildLevel() {
+  if(chaosMode){ /* use lv5 maze structure for chaos */ }
   mazeData = generateMaze(lv - 1);
   map = mazeData.grid;
 
@@ -718,7 +774,7 @@ function spawnEntities() {
   py = mazeData.spawnR + 0.5;
   pdir = 1;
   guards = [];
-  const d = DIFF[lv-1];
+  const d = getLvDiff();
   let placed = 0, tries = 0;
   while (placed < d.gc && tries++ < 1000) {
     const r = 1 + Math.floor(Math.random() * (ROWS-2));
@@ -801,7 +857,7 @@ function wHit(x, y) {
 // GUARD UPDATE
 // ═══════════════════════════════════════════════════════════
 function upGuards(dt) {
-  const d = DIFF[lv-1];
+  const d = getLvDiff();
   const pr=Math.floor(py), pc=Math.floor(px);
   for (const g of guards) {
     const gr=Math.floor(g.y), gc=Math.floor(g.x);
@@ -841,7 +897,7 @@ function upGuards(dt) {
 // GAS UPDATE (BFS flood fill)
 // ═══════════════════════════════════════════════════════════
 function updateGas(dt) {
-  const d = DIFF[lv-1];
+  const d = getLvDiff();
   const pr=Math.floor(py), pc=Math.floor(px);
   if (!gasActive) {
     const pathDist = bfsDist(GS_R, GS_C, pr, pc);
@@ -948,9 +1004,23 @@ function triggerWin() {
   const bonus = Math.max(0, 500 - lvTimer*3) + lvCurioCollected*50;
   lvScore = bonus;
 
-  if (lv >= MAX_LV) {
+  if (lv >= MAX_LV || (chaosMode && lv>=6)) {
     sc='won'; clearInterval(tInt);
     const totalMs=Date.now()-runStartMs;
+    // Chaos mode — unranked
+    if(chaosMode){
+      showMainOv(`<h1 style="color:#ff4444">&#128683; CHAOS ESCAPED!</h1>
+        <div class="sub">UNRANKED · 10 GUARDS DEFEATED</div>
+        <div style="font-size:13px;color:#b0a898;margin:10px 0 16px;line-height:1.7;">You survived the Archives at maximum chaos. This run does not count toward ranking — but you know what you did.</div>
+        <div style="display:flex;gap:18px;justify-content:center;margin-bottom:16px;">
+          <div><div style="color:#555;font-size:10px;">TIME</div><div style="color:#e0d8c0;font-weight:bold;">${fmtMs(totalMs)}</div></div>
+          <div><div style="color:#555;font-size:10px;">DEATHS</div><div style="color:${deaths>0?'#cc3333':'#22cc55'};font-weight:bold;">${deaths}</div></div>
+        </div>
+        <button class="btn g" onclick="startGame()">&#9654; NEW RUN</button>
+        <button class="btn sm" onclick="chaosMode=false;showLBScreen();">&#127942; LEADERBOARD</button>`);
+      return;
+    }
+    // Only rank if player started from level 1
     let rating,rLabel,rCol,rGrad,rMsg;
     if(deaths===0&&curioCollected>=25){
       rating='A';rLabel='LEGENDARY EXPLORER';rCol='#ff8c00';
@@ -965,7 +1035,8 @@ function triggerWin() {
       rGrad='linear-gradient(135deg,#1a6dff,#4488ff,#c822ff)';
       rMsg='You escaped, but death visited '+deaths+' time'+(deaths>1?'s':'')+'. The Archives remember every stumble.';
     }
-    const entries=recordRun(totalMs,curioCollected,rating);
+    const entries=(startLevel===1)?recordRun(totalMs,curioCollected,rating):loadLB();
+    if(startLevel>1){ rMsg+=' (Started from Level '+startLevel+' — not eligible for ranking)'; }
     showWinnerScreen(rating,rLabel,rCol,rGrad,rMsg,totalMs,entries);
     return;
   }
@@ -977,9 +1048,9 @@ function triggerWin() {
   document.getElementById('lvnum').style.color = '#22cc55';
   document.getElementById('lvname').textContent = ZONE_NAMES[lv-1];
 
-  const nextDiff=DIFF[Math.min(lv,DIFF.length-1)];
+  const nextDiff=getLvDiff();
   document.getElementById('lvstats').innerHTML =
-    `Curiosity Points collected: <b style="color:#ffaa22">${lvCurioCollected}/25</b><br>`+
+    `Curiosity Points collected: <b style="color:#ffaa22">${lvCurioCollected}/5</b><br>`+
     `Level time: <b>${lvTimer}s</b> &nbsp;|&nbsp; Bonus: <b>+${lvScore}</b><br>`+
     `Total curiosity: <b style="color:#ffaa22">★ ${curioCollected}/25</b><br><br>`+
     `<span style="color:#c8a84b">— NEXT: LEVEL MAZE ${lv+1} — ${ZONE_NAMES[lv]} —</span><br>`+
@@ -1079,7 +1150,7 @@ function notify(msg, dur=2000) {
 
 function mainMenuHTML() {
   return `<h1>ASHOKA ARCHIVES</h1><h2>THE MAZE · 5 LEVELS</h2>`+
-    `<p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 5 unique corridor mazes through the Ashoka University Archives.<br>`+
+    `<p>You are an <b style="color:#c8a84b">Ashoka Visual Arts Explorer</b>. Navigate 10 unique corridor mazes through the Ashoka University Archives.<br>`+
     `<span style="color:#22cc55">☁</span> Fumigation gas spreads — keep moving or be sent to the Infirmary!<br>`+
     `<span style="color:#cc3333">⚠</span> Guards patrol — caught = taken to CADI!<br>`+
     `All 5 Curiosity Points are always available each level.<br>`+
@@ -1431,7 +1502,7 @@ function drawMinimap() {
 
   // Update sidebar run info
   const sbi = document.getElementById('sb-info');
-  if(sbi) sbi.innerHTML=`Level: ${lv}/5<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/25<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
+  if(sbi) sbi.innerHTML=`Level: ${lv}/5<br>Deaths: ${deaths}<br>Curious: ${curioCollected}/5<br>ND: ${noDeath?'<span style="color:#22cc55">YES</span>':'<span style="color:#cc3333">NO</span>'}`;
   const sbl = document.getElementById('sb-level');
   if(sbl) sbl.innerHTML=`<b style="color:#c8a84b">${ZONE_NAMES[lv-1]||''}</b><br><span style="font-size:15px;color:#555">${lv<10?'Next: '+ZONE_NAMES[lv]:''}</span>`;
 }
@@ -1446,7 +1517,7 @@ function drawHUD() {
   const timeStr=(m>0?m+'m ':'')+s+'s';
   const curioPct=`★${curioCollected}`;
   document.getElementById('hud').innerHTML=
-    `<span>LEVEL MAZE ${lv}/25 · ${ZONE_NAMES[lv-1]}</span>`+
+    `<span>LEVEL MAZE ${lv}/5 · ${ZONE_NAMES[lv-1]}</span>`+
     `<span>${timeStr} · ${curioPct} · ${gasLbl}</span>`+
     `<span>${hearts} · ${nd}</span>`;
 }
@@ -1463,7 +1534,7 @@ function loop(ts) {
 }
 
 function startGame() {
-  sc='playing'; lv=1; deaths=0; noDeath=true;
+  sc='playing'; lv=startLevel; deaths=0; noDeath=!chaosMode;
   curioCollected=0; lvCurioCollected=0; lvTimer=0; cp=null;
   deathPending=false; runStartMs=Date.now();
   document.getElementById('ov').style.display='none';
@@ -1736,8 +1807,8 @@ const LEVEL_STORIES = [
 ];
 
 function showLevelIntro(onStart) {
-  const d = DIFF[lv-1];
-  document.getElementById('intro-lvnum').textContent = `LEVEL MAZE ${lv} / 5`;
+  const d = getLvDiff();
+  document.getElementById('intro-lvnum').textContent = `${chaosMode?"☠ CHAOS":("LEVEL MAZE "+lv+" / 5")}`;
   document.getElementById('intro-lvname').textContent = ZONE_NAMES[lv-1];
   document.getElementById('intro-story').textContent = LEVEL_STORIES[lv-1] || '';
   document.getElementById('intro-diff').innerHTML =
@@ -1756,7 +1827,7 @@ function showLevelIntro(onStart) {
 }
 
 // Wire buttons
-document.getElementById('startbtn').onclick = ()=>showNameEntry();
+document.getElementById('startbtn').onclick = ()=>showInputChooser(()=>showLvChooser(()=>showNameEntry()));
 function showNameEntry() {
   // Check if name already set from a previous session
   const saved = localStorage.getItem('ashoka_playername');
@@ -1806,6 +1877,8 @@ document.getElementById('lbbtn').onclick    = ()=>showLBScreen();
 
 // Expose to global scope for inline onclick handlers
 window.submitName = submitName;
+window.saveCP=saveCP;
+window.pauseGame=pauseGame;
 window.showNameEntry = showNameEntry;
 window.resumeGame = resumeGame;
 window.startGame = startGame;
@@ -1861,6 +1934,152 @@ function showWinnerScreen(rating,rLabel,rCol,rGrad,rMsg,totalMs,entries){
 window.showWinnerScreen=showWinnerScreen;
 window.showLBScreen=showLBScreen;
 window.backFromLB=backFromLB;
+
+// ═══════════════════════════════════════
+// GAMEPAD / XBOX CONTROLLER ENGINE
+// ═══════════════════════════════════════
+let useController = false;
+let gpIndex = null;
+let gpPrev = {}; // previous button states for edge detection
+
+// Axis dead zone
+const DEAD = 0.25;
+
+// Button map (standard gamepad layout)
+const GP = {
+  A:0, B:1, X:2, Y:3,
+  LB:4, RB:5,
+  START:9, SELECT:8,
+  DPAD_UP:12, DPAD_DOWN:13, DPAD_LEFT:14, DPAD_RIGHT:15
+};
+
+window.addEventListener('gamepadconnected', e => {
+  gpIndex = e.gamepad.index;
+  if(useController) document.getElementById('ctrl-badge').style.display='block';
+  console.log('Controller connected:', e.gamepad.id);
+});
+window.addEventListener('gamepaddisconnected', e => {
+  if(e.gamepad.index === gpIndex) { gpIndex=null; document.getElementById('ctrl-badge').style.display='none'; }
+});
+
+function getGP() {
+  if(gpIndex===null) return null;
+  const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+  return gps[gpIndex] || null;
+}
+
+function gpPressed(gp, btn) { return gp && gp.buttons[btn] && gp.buttons[btn].pressed; }
+function gpJustPressed(gp, btn) { return gpPressed(gp,btn) && !gpPrev[btn]; }
+
+function pollGamepad() {
+  if(!useController) { requestAnimationFrame(pollGamepad); return; }
+  const gp = getGP();
+  if(!gp) { requestAnimationFrame(pollGamepad); return; }
+
+  // ── Movement: left stick + d-pad → inject into keys ──
+  const axisX = gp.axes[0] || 0;
+  const axisY = gp.axes[1] || 0;
+  // Left stick
+  keys['ArrowLeft']  = axisX < -DEAD || gpPressed(gp, GP.DPAD_LEFT);
+  keys['ArrowRight'] = axisX >  DEAD || gpPressed(gp, GP.DPAD_RIGHT);
+  keys['ArrowUp']    = axisY < -DEAD || gpPressed(gp, GP.DPAD_UP);
+  keys['ArrowDown']  = axisY >  DEAD || gpPressed(gp, GP.DPAD_DOWN);
+
+  // ── Sprint: hold LB or RB = shift ──
+  keys['Shift'] = gpPressed(gp, GP.LB) || gpPressed(gp, GP.RB);
+
+  // ── START = pause/resume ──
+  if(gpJustPressed(gp, GP.START)) {
+    if(sc==='playing') pauseGame();
+    else if(sc==='paused') resumeGame();
+  }
+
+  // ── B = back/dismiss ──
+  if(gpJustPressed(gp, GP.B)) {
+    if(imgPopActive) { document.getElementById('imgpop').click(); }
+    else if(sc==='paused') resumeGame();
+    else if(document.getElementById('lbscreen') && document.getElementById('lbscreen').style.display==='flex') backFromLB();
+  }
+
+  // ── A / X / Y = accept/interact (confirm overlays) ──
+  const accept = gpJustPressed(gp,GP.A)||gpJustPressed(gp,GP.X)||gpJustPressed(gp,GP.Y);
+  if(accept) {
+    if(imgPopActive){ document.getElementById('imgpop').click(); }
+    else if(sc==='paused'){ resumeGame(); }
+    else if(sc==='lvtransition'){
+      const nb=document.getElementById('lvnext');
+      if(nb) nb.click();
+    }
+  }
+
+  // ── Checkpoint: SELECT button ──
+  if(gpJustPressed(gp, GP.SELECT)) saveCP();
+
+  // Store prev state
+  gp.buttons.forEach((b,i)=>{ gpPrev[i]=b.pressed; });
+
+  requestAnimationFrame(pollGamepad);
+}
+
+// Start polling
+requestAnimationFrame(pollGamepad);
+
+// ── Input chooser shown before name entry ──
+function showInputChooser(onDone) {
+  const div = document.getElementById('inputchooser');
+  div.style.display='flex';
+  // Auto-detect controller already connected
+  const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+  const hasGP = Array.from(gps).some(g=>g);
+  if(hasGP && gpIndex===null) {
+    Array.from(gps).forEach((g,i)=>{ if(g) gpIndex=i; });
+  }
+  document.getElementById('kb-btn').onclick = () => {
+    useController=false;
+    document.getElementById('ctrl-badge').style.display='none';
+    div.style.display='none';
+    onDone();
+  };
+  document.getElementById('gp-btn').onclick = () => {
+    useController=true;
+    document.getElementById('ctrl-badge').style.display='block';
+    div.style.display='none';
+    onDone();
+  };
+}
+window.showInputChooser = showInputChooser;
+
+// ═══════════════════════════════════════
+// LEVEL CHOOSER
+// ═══════════════════════════════════════
+function showLvChooser(onDone){
+  startLevel=1; chaosMode=false;
+  const div=document.getElementById('lvchooser');
+  div.style.display='flex';
+  window._lvDone=onDone;
+}
+function setStartLv(n){
+  startLevel=n;
+  document.querySelectorAll('.lvcbtn').forEach((b,i)=>{
+    b.classList.toggle('sel',i===n-1);
+  });
+  const note=document.getElementById('lvc-note');
+  note.textContent=n===1?'Starting Level 1 — Ranking ENABLED ✓':'Starting Level '+n+' — Ranking DISABLED (start from L1 to rank)';
+  note.style.color=n===1?'#22cc55':'#cc3333';
+}
+function confirmStartLv(){
+  document.getElementById('lvchooser').style.display='none';
+  if(window._lvDone) window._lvDone();
+}
+window.showLvChooser=showLvChooser;
+window.setStartLv=setStartLv;
+window.confirmStartLv=confirmStartLv;
+
+function startChaos(){
+  chaosMode=true; startLevel=1;
+  showInputChooser(()=>showNameEntry());
+}
+window.startChaos=startChaos;
 
 // Start loop idle
 lastTs=performance.now(); loop(lastTs);
