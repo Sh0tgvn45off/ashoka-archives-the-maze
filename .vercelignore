@@ -1,0 +1,3 @@
+# Not part of the static site: the Apps Script source and the Node tests.
+server/
+tests/
